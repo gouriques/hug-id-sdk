@@ -1,0 +1,47 @@
+{
+  "": {
+    "swift-dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/master.swiftdeps"
+  },
+  "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/API/IdentityApiClient.swift": {
+    "dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityApiClient.d",
+    "object": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityApiClient.swift.o",
+    "swiftmodule": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityApiClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityApiClient.swiftdeps",
+    "diagnostics": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityApiClient.dia"
+  },
+  "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityService.swift": {
+    "dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityService.d",
+    "object": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityService.swift.o",
+    "swiftmodule": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityService~partial.swiftmodule",
+    "swift-dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityService.swiftdeps",
+    "diagnostics": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityService.dia"
+  },
+  "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceConfig.swift": {
+    "dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceConfig.d",
+    "object": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceConfig.swift.o",
+    "swiftmodule": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceConfig~partial.swiftmodule",
+    "swift-dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceConfig.swiftdeps",
+    "diagnostics": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceConfig.dia"
+  },
+  "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceErrors.swift": {
+    "dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceErrors.d",
+    "object": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceErrors.swift.o",
+    "swiftmodule": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceErrors~partial.swiftmodule",
+    "swift-dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceErrors.swiftdeps",
+    "diagnostics": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceErrors.dia"
+  },
+  "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/UI/VerificationViewController.swift": {
+    "dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationViewController.d",
+    "object": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationViewController.swift.o",
+    "swiftmodule": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationViewController~partial.swiftmodule",
+    "swift-dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationViewController.swiftdeps",
+    "diagnostics": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationViewController.dia"
+  },
+  "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/VerificationResult.swift": {
+    "dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationResult.d",
+    "object": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationResult.swift.o",
+    "swiftmodule": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationResult~partial.swiftmodule",
+    "swift-dependencies": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationResult.swiftdeps",
+    "diagnostics": "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationResult.dia"
+  }
+}

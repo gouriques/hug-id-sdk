@@ -1,0 +1,298 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.HUGIdentitySDK-arm64-apple-macosx26.0-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/sources",
+      "importPath" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/API/IdentityApiClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityService.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceConfig.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceErrors.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/UI/VerificationViewController.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/VerificationResult.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "HUGIdentitySDK",
+      "moduleOutputPath" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/Modules/HUGIdentitySDK.swiftmodule",
+      "objects" : [
+        "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityApiClient.swift.o",
+        "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityService.swift.o",
+        "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceConfig.swift.o",
+        "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/IdentityServiceErrors.swift.o",
+        "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationViewController.swift.o",
+        "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/VerificationResult.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx10.13",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-Onone",
+        "-enable-testing",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/include/HUGIdentitySDK-Swift.h",
+        "-swift-version",
+        "5",
+        "-Xfrontend",
+        "-experimental-lazy-typecheck",
+        "-Xfrontend",
+        "-experimental-skip-all-function-bodies",
+        "-Xfrontend",
+        "-experimental-allow-module-with-compiler-errors",
+        "-Xfrontend",
+        "-empty-abi-descriptor",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "hug_id_sdk"
+      ],
+      "outputFileMapPath" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/Modules/HUGIdentitySDK.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : true,
+      "sources" : [
+        "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/API/IdentityApiClient.swift",
+        "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityService.swift",
+        "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceConfig.swift",
+        "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceErrors.swift",
+        "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/UI/VerificationViewController.swift",
+        "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/VerificationResult.swift"
+      ],
+      "tempsPath" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "HUGIdentitySDK" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "HUGIdentitySDK",
+      "-package-name",
+      "hug_id_sdk",
+      "-c",
+      "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/API/IdentityApiClient.swift",
+      "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityService.swift",
+      "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceConfig.swift",
+      "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceErrors.swift",
+      "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/UI/VerificationViewController.swift",
+      "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/VerificationResult.swift",
+      "-I",
+      "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx10.13",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-Onone",
+      "-enable-testing",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/include/HUGIdentitySDK-Swift.h",
+      "-swift-version",
+      "5",
+      "-Xfrontend",
+      "-experimental-lazy-typecheck",
+      "-Xfrontend",
+      "-experimental-skip-all-function-bodies",
+      "-Xfrontend",
+      "-experimental-allow-module-with-compiler-errors",
+      "-Xfrontend",
+      "-empty-abi-descriptor",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "hug_id_sdk",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "HUGIdentitySDK" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/API/IdentityApiClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityService.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceConfig.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/IdentityServiceErrors.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/UI/VerificationViewController.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/guilherme/sourcecode/hug-id-sdk/ios/Sources/HUGIdentitySDK/VerificationResult.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/sources"
+    },
+    "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

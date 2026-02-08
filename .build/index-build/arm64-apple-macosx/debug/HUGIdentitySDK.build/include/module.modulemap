@@ -1,0 +1,3 @@
+module HUGIdentitySDK {
+    header "/Users/guilherme/sourcecode/hug-id-sdk/.build/index-build/arm64-apple-macosx/debug/HUGIdentitySDK.build/include/HUGIdentitySDK-Swift.h"
+}
