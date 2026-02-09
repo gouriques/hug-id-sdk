@@ -257,6 +257,10 @@ final class VerificationViewController: UIViewController {
         let alert = UIAlertController(title: "Foto", message: nil, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Câmera", style: .default) { [weak self] _ in self?.openCamera() })
         alert.addAction(UIAlertAction(title: "Cancelar", style: .cancel))
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = buttonPhoto
+            popover.sourceRect = buttonPhoto.bounds
+        }
         present(alert, animated: true)
     }
 
