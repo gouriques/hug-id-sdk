@@ -136,7 +136,7 @@ final class VerificationViewController: UIViewController {
         photoWrapper.translatesAutoresizingMaskIntoConstraints = false
         buttonPhoto.translatesAutoresizingMaskIntoConstraints = false
         applyPhotoButtonStyle()
-        buttonPhoto.setTitle("Enviar foto", for: .normal)
+        buttonPhoto.setTitle("Tirar Foto", for: .normal)
         buttonPhoto.addTarget(self, action: #selector(sendPhotoTapped), for: .touchUpInside)
         photoWrapper.addSubview(buttonPhoto)
         NSLayoutConstraint.activate([
@@ -155,6 +155,7 @@ final class VerificationViewController: UIViewController {
         fieldCode.delegate = codeFieldDelegate
         confirmWrapper.translatesAutoresizingMaskIntoConstraints = false
         buttonConfirm.translatesAutoresizingMaskIntoConstraints = false
+        applyConfirmButtonStyle()
         buttonConfirm.setTitle("Confirmar código", for: .normal)
         buttonConfirm.addTarget(self, action: #selector(confirmTapped), for: .touchUpInside)
         confirmWrapper.addSubview(buttonConfirm)
@@ -170,13 +171,25 @@ final class VerificationViewController: UIViewController {
     }
 
     private func applyPhotoButtonStyle() {
+        let tint = view.tintColor ?? .systemBlue
         buttonPhoto.setTitleColor(.white, for: .normal)
         buttonPhoto.setTitleColor(.white.withAlphaComponent(0.7), for: .highlighted)
-        buttonPhoto.backgroundColor = .systemBlue
+        buttonPhoto.backgroundColor = tint
         buttonPhoto.layer.cornerRadius = 12
         buttonPhoto.clipsToBounds = true
         buttonPhoto.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         buttonPhoto.contentEdgeInsets = UIEdgeInsets(top: 14, left: 24, bottom: 14, right: 24)
+    }
+
+    private func applyConfirmButtonStyle() {
+        let tint = view.tintColor ?? .systemBlue
+        buttonConfirm.setTitleColor(.white, for: .normal)
+        buttonConfirm.setTitleColor(.white.withAlphaComponent(0.7), for: .highlighted)
+        buttonConfirm.backgroundColor = tint
+        buttonConfirm.layer.cornerRadius = 12
+        buttonConfirm.clipsToBounds = true
+        buttonConfirm.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        buttonConfirm.contentEdgeInsets = UIEdgeInsets(top: 14, left: 24, bottom: 14, right: 24)
     }
 
     private func updateUI() {
@@ -219,6 +232,7 @@ final class VerificationViewController: UIViewController {
             buttonPhoto.isHidden = true
             photoWrapper.isHidden = true
             photoTapOverlay?.isHidden = true
+            applyConfirmButtonStyle()
             fieldCode.isHidden = false
             buttonConfirm.isHidden = false
             confirmWrapper.isHidden = false
@@ -256,24 +270,13 @@ final class VerificationViewController: UIViewController {
         if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 DispatchQueue.main.async {
-                    if granted { self?.pickOrTakePhoto() }
+                    if granted { self?.openCamera() }
                     else { self?.labelStatus.text = "Permita acesso à câmera nas configurações." }
                 }
             }
             return
         }
-        pickOrTakePhoto()
-    }
-
-    private func pickOrTakePhoto() {
-        let alert = UIAlertController(title: "Foto", message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "Câmera", style: .default) { [weak self] _ in self?.openCamera() })
-        alert.addAction(UIAlertAction(title: "Cancelar", style: .cancel))
-        if let popover = alert.popoverPresentationController {
-            popover.sourceView = buttonPhoto
-            popover.sourceRect = buttonPhoto.bounds
-        }
-        present(alert, animated: true)
+        openCamera()
     }
 
     private func openCamera() {
@@ -292,13 +295,6 @@ final class VerificationViewController: UIViewController {
         overlay.frame = UIScreen.main.bounds
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         return overlay
-    }
-
-    private func openPicker() {
-        let picker = UIImagePickerController()
-        picker.sourceType = .photoLibrary
-        picker.delegate = self
-        present(picker, animated: true)
     }
 
     private func uploadPhoto(_ image: UIImage) {
