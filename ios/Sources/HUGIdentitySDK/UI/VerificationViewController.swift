@@ -135,6 +135,7 @@ final class VerificationViewController: UIViewController {
         stack.addArrangedSubview(labelDestination)
         photoWrapper.translatesAutoresizingMaskIntoConstraints = false
         buttonPhoto.translatesAutoresizingMaskIntoConstraints = false
+        applyPhotoButtonStyle()
         buttonPhoto.setTitle("Enviar foto", for: .normal)
         buttonPhoto.addTarget(self, action: #selector(sendPhotoTapped), for: .touchUpInside)
         photoWrapper.addSubview(buttonPhoto)
@@ -168,6 +169,16 @@ final class VerificationViewController: UIViewController {
         updateUI()
     }
 
+    private func applyPhotoButtonStyle() {
+        buttonPhoto.setTitleColor(.white, for: .normal)
+        buttonPhoto.setTitleColor(.white.withAlphaComponent(0.7), for: .highlighted)
+        buttonPhoto.backgroundColor = .systemBlue
+        buttonPhoto.layer.cornerRadius = 12
+        buttonPhoto.clipsToBounds = true
+        buttonPhoto.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        buttonPhoto.contentEdgeInsets = UIEdgeInsets(top: 14, left: 24, bottom: 14, right: 24)
+    }
+
     private func updateUI() {
         switch step {
         case .loading:
@@ -185,6 +196,7 @@ final class VerificationViewController: UIViewController {
             labelStatus.text = "Tire uma selfie para enviar."
             labelDestination.text = nil
             labelDestination.isHidden = true
+            applyPhotoButtonStyle()
             buttonPhoto.isHidden = false
             photoWrapper.isHidden = false
             photoTapOverlay?.isHidden = false
