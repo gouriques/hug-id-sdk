@@ -1,6 +1,6 @@
 # HUG Identity SDK (Android)
 
-SDK de verificação de identidade do **HUG-Identity Service**. Fluxo: criar sessão → captura de foto (selfie) → envio de código por SMS/e-mail → confirmação do código.
+SDK de verificação de identidade do **HUG-Identity Service**. Fluxo: criar sessão → captura de foto (selfie) → upload da foto (código enviado por e-mail ou SMS) → digitar código → confirmação. Pronto para integração no HUGDoctor-Android; repositório unificado de distribuição: **hug-id-sdk** (pasta `android/`).
 
 ## Requisitos
 
@@ -83,3 +83,12 @@ val launcher = registerForActivityResult(ActivityResultContracts.StartActivityFo
 }
 launcher.launch(IdentityService.createVerificationIntent(this, config))
 ```
+
+## Contrato do backend
+
+- `POST /v1/verification/session` – cria sessão (userId, email, phone). Retorna `verificationSessionId`, `expiresAt`, `maskedEmail`, `maskedPhone`.
+- `POST /v1/verification/photo` – envia foto (multipart). Retorna `accepted`, `maskedDestination` (destino onde o código foi enviado).
+- `POST /v1/verification/confirm` – confirma código.
+- `GET /v1/verification/status?verificationSessionId=...` – status da sessão (opcional).
+
+O código é enviado por um único canal (e-mail com prioridade; SMS se necessário). Documentação do serviço: [HUG-IdentityService](https://github.com/gouriques/HUG-IdentityService) / spec em `spec/`.

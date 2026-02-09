@@ -1,7 +1,6 @@
 package com.hug.identity.sdk.ui
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
@@ -32,6 +31,7 @@ class VerificationActivity : AppCompatActivity() {
     private var sessionId: String = ""
     private var maskedEmail: String? = null
     private var maskedPhone: String? = null
+    private var maskedDestinationFromPhoto: String? = null
     private val scope = CoroutineScope(Dispatchers.Main + Job())
     private var photoFile: File? = null
 
@@ -67,6 +67,7 @@ class VerificationActivity : AppCompatActivity() {
     }
 
     private fun startSession() {
+        maskedDestinationFromPhoto = null
         val cfg = config ?: return
         val api = ApiClient.createApi(cfg)
         scope.launch {
@@ -112,7 +113,7 @@ class VerificationActivity : AppCompatActivity() {
                 buttonConfirm.visibility = View.GONE
             }
             Step.TAKE_PHOTO -> {
-                statusText.text = "Tire uma selfie ou escolha uma foto para enviar."
+                statusText.text = "Tire uma selfie para enviar."
                 destinationText.visibility = View.GONE
                 photoSection.visibility = View.VISIBLE
                 codeField.visibility = View.GONE
@@ -120,9 +121,15 @@ class VerificationActivity : AppCompatActivity() {
             }
             Step.ENTER_CODE -> {
                 statusText.text = "Digite o código recebido por e-mail ou SMS."
-                val parts = listOfNotNull(maskedEmail, maskedPhone).filter { it.isNotBlank() }
-                destinationText.text = if (parts.isEmpty()) "" else "Código enviado para: ${parts.joinToString(" e ")}"
-                destinationText.visibility = if (parts.isEmpty()) View.GONE else View.VISIBLE
+                val dest = maskedDestinationFromPhoto?.takeIf { it.isNotBlank() }
+                destinationText.text = when {
+                    dest != null -> "Código enviado para: $dest"
+                    else -> {
+                        val parts = listOfNotNull(maskedEmail, maskedPhone).filter { it.isNotBlank() }
+                        if (parts.isEmpty()) "" else "Código enviado para: ${parts.joinToString(" e ")}"
+                    }
+                }
+                destinationText.visibility = if (destinationText.text.isNullOrBlank()) View.GONE else View.VISIBLE
                 photoSection.visibility = View.GONE
                 codeField.visibility = View.VISIBLE
                 buttonConfirm.visibility = View.VISIBLE
@@ -138,14 +145,11 @@ class VerificationActivity : AppCompatActivity() {
     }
 
     private fun pickOrTakePhoto() {
-        val options = arrayOf("Câmera", "Galeria", "Cancelar")
+        val options = arrayOf("Câmera", "Cancelar")
         AlertDialog.Builder(this)
             .setTitle("Foto")
             .setItems(options) { _, which ->
-                when (which) {
-                    0 -> openCamera()
-                    1 -> openGallery()
-                }
+                if (which == 0) openCamera()
             }
             .show()
     }
@@ -163,26 +167,16 @@ class VerificationActivity : AppCompatActivity() {
         }
     }
 
-    private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        startActivityForResult(intent, REQ_GALLERY)
-    }
-
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != RESULT_OK) return
-        when (requestCode) {
-            REQ_CAMERA -> photoFile?.let { uploadPhoto(it) }
-            REQ_GALLERY -> data?.data?.let { uri -> uploadPhotoFromUri(uri) }
-        }
+        if (requestCode == REQ_CAMERA) photoFile?.let { uploadPhoto(it) }
     }
 
-    private fun uploadPhotoFromUri(uri: Uri) {
-        val stream = contentResolver.openInputStream(uri) ?: return
-        val file = File(cacheDir, "picked_${System.currentTimeMillis()}.jpg")
-        file.outputStream().use { out -> stream.copyTo(out) }
-        uploadPhoto(file)
+    override fun onResume() {
+        super.onResume()
+        if (step == Step.ENTER_CODE) updateUI()
     }
 
     private fun uploadPhoto(file: File) {
@@ -199,6 +193,7 @@ class VerificationActivity : AppCompatActivity() {
                     api.uploadPhoto(sessionBody, part)
                 }
                 if (response.isSuccessful && response.body()?.accepted == true) {
+                    maskedDestinationFromPhoto = response.body()?.maskedDestination
                     step = Step.ENTER_CODE
                     updateUI()
                 } else {
@@ -255,6 +250,5 @@ class VerificationActivity : AppCompatActivity() {
 
     companion object {
         private const val REQ_CAMERA = 1001
-        private const val REQ_GALLERY = 1002
     }
 }

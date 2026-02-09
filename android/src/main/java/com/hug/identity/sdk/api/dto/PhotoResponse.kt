@@ -4,5 +4,6 @@ import com.google.gson.annotations.SerializedName
 
 internal data class PhotoResponse(
     @SerializedName("accepted") val accepted: Boolean,
-    @SerializedName("message") val message: String? = null
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("maskedDestination") val maskedDestination: String? = null
 )
