@@ -1,6 +1,6 @@
 # HUGIdentitySDK (iOS)
 
-SDK de verificação de identidade do **HUG-Identity Service**. Fluxo: criar sessão → captura de foto (selfie) → envio de código por SMS/e-mail → confirmação do código.
+SDK de verificação de identidade do **HUG-Identity Service**. Fluxo: criar sessão → captura de foto (selfie) → upload da foto (código enviado por e-mail ou SMS) → digitar código → confirmação. Integrado ao HUGDoctor-iOS (Fase 1 concluída); FaceTec foi descontinuado neste fluxo.
 
 ## Requisitos
 
@@ -75,9 +75,12 @@ IdentityService.startVerification(from: self, config: config) { result in
 
 O SDK consome a API do HUG-Identity Service:
 
-- `POST /v1/verification/session` – cria sessão (body: userId, email, phone)
-- `POST /v1/verification/photo` – envia foto (multipart: verificationSessionId, file)
-- `POST /v1/verification/confirm` – confirma código (body: verificationSessionId, code)
+- `POST /v1/verification/session` – cria sessão (body: userId, email, phone). Retorna `verificationSessionId`, `expiresAt`, `maskedEmail`, `maskedPhone`.
+- `POST /v1/verification/photo` – envia foto (multipart: verificationSessionId, file). Retorna `accepted`, `maskedDestination` (destino mascarado onde o código foi enviado: e-mail ou SMS).
+- `POST /v1/verification/confirm` – confirma código (body: verificationSessionId, code).
+- `GET /v1/verification/status?verificationSessionId=...` – opcional; retorna status da sessão (`pending_photo`, `pending_code`, `verified`, `expired`).
+
+O código é enviado por **um único canal** por solicitação: prioridade e-mail; SMS apenas se não houver e-mail ou se o envio por e-mail falhar. A tela de código exibe apenas o destino efetivo (`maskedDestination`).
 
 ## Build
 

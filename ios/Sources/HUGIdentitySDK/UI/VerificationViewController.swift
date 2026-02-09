@@ -17,6 +17,7 @@ final class VerificationViewController: UIViewController {
     private var sessionId: String = ""
     private var maskedEmail: String?
     private var maskedPhone: String?
+    private var maskedDestinationFromPhoto: String?
 
     private let stack = UIStackView()
     private let labelStatus = UILabel()
@@ -71,6 +72,11 @@ final class VerificationViewController: UIViewController {
         super.viewDidAppear(animated)
         photoTapOverlay.map { view.bringSubviewToFront($0) }
         confirmTapOverlay.map { view.bringSubviewToFront($0) }
+        if case .enterCode = step {
+            updateUI()
+            view.bringSubviewToFront(confirmWrapper)
+            confirmTapOverlay.map { view.bringSubviewToFront($0) }
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -176,7 +182,7 @@ final class VerificationViewController: UIViewController {
             confirmWrapper.isHidden = true
             confirmTapOverlay?.isHidden = true
         case .takePhoto:
-            labelStatus.text = "Tire uma selfie ou escolha uma foto para enviar."
+            labelStatus.text = "Tire uma selfie para enviar."
             labelDestination.text = nil
             labelDestination.isHidden = true
             buttonPhoto.isHidden = false
@@ -188,11 +194,16 @@ final class VerificationViewController: UIViewController {
             confirmTapOverlay?.isHidden = true
         case .enterCode:
             labelStatus.text = "Digite o código recebido por e-mail ou SMS."
-            var parts: [String] = []
-            if let e = maskedEmail, !e.isEmpty { parts.append(e) }
-            if let p = maskedPhone, !p.isEmpty { parts.append(p) }
-            labelDestination.text = parts.isEmpty ? nil : "Código enviado para: " + parts.joined(separator: " e ")
-            labelDestination.isHidden = parts.isEmpty
+            if let dest = maskedDestinationFromPhoto, !dest.isEmpty {
+                labelDestination.text = "Código enviado para: " + dest
+                labelDestination.isHidden = false
+            } else {
+                var parts: [String] = []
+                if let e = maskedEmail, !e.isEmpty { parts.append(e) }
+                if let p = maskedPhone, !p.isEmpty { parts.append(p) }
+                labelDestination.text = parts.isEmpty ? nil : "Código enviado para: " + parts.joined(separator: " e ")
+                labelDestination.isHidden = parts.isEmpty
+            }
             buttonPhoto.isHidden = true
             photoWrapper.isHidden = true
             photoTapOverlay?.isHidden = true
@@ -212,6 +223,7 @@ final class VerificationViewController: UIViewController {
     }
 
     private func startSession() {
+        maskedDestinationFromPhoto = nil
         Task { @MainActor in
             do {
                 let (id, _, maskedE, maskedP) = try await api.createSession(userId: config.userId, email: config.email, phone: config.phone)
@@ -242,9 +254,8 @@ final class VerificationViewController: UIViewController {
     }
 
     private func pickOrTakePhoto() {
-        let alert = UIAlertController(title: "Foto", message: "Escolha a origem", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "Foto", message: nil, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Câmera", style: .default) { [weak self] _ in self?.openCamera() })
-        alert.addAction(UIAlertAction(title: "Galeria", style: .default) { [weak self] _ in self?.openPicker() })
         alert.addAction(UIAlertAction(title: "Cancelar", style: .cancel))
         present(alert, animated: true)
     }
@@ -280,7 +291,7 @@ final class VerificationViewController: UIViewController {
         buttonPhoto.isEnabled = false
         Task { @MainActor in
             do {
-                try await api.uploadPhoto(sessionId: sessionId, imageData: data)
+                maskedDestinationFromPhoto = try await api.uploadPhoto(sessionId: sessionId, imageData: data)
                 step = .enterCode(sessionId: sessionId)
                 updateUI()
             } catch {

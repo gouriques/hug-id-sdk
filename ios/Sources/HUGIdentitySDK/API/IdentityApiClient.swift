@@ -41,7 +41,7 @@ final class IdentityApiClient {
         return (decoded.verificationSessionId, expires, decoded.maskedEmail, decoded.maskedPhone)
     }
 
-    func uploadPhoto(sessionId: String, imageData: Data, contentType: String = "image/jpeg") async throws {
+    func uploadPhoto(sessionId: String, imageData: Data, contentType: String = "image/jpeg") async throws -> String? {
         guard let requestURL = url("v1/verification/photo") else { throw IdentityServiceError.invalidURL }
         let boundary = "Boundary-\(UUID().uuidString)"
         var request = URLRequest(url: requestURL)
@@ -66,6 +66,7 @@ final class IdentityApiClient {
         }
         let decoded = try JSONDecoder().decode(PhotoResponse.self, from: data)
         if !decoded.accepted { throw IdentityServiceError.photoRejected(decoded.message ?? "Foto não aceita") }
+        return decoded.maskedDestination
     }
 
     func confirmCode(sessionId: String, code: String) async throws {
@@ -102,6 +103,7 @@ private struct CreateSessionResponse: Decodable {
 private struct PhotoResponse: Decodable {
     let accepted: Bool
     let message: String?
+    let maskedDestination: String?
 }
 
 private struct ConfirmBody: Encodable {
