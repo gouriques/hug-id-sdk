@@ -1,0 +1,26 @@
+---
+description: Onde criar/atualizar documentação no hug-id-sdk (distribuição dos SDKs).
+globs: "**/*.md"
+alwaysApply: true
+---
+
+# hug-id-sdk — Organização da documentação
+
+## Regra geral
+
+- Este repositório **não tem código-fonte** — apenas artefatos compilados dos SDKs (iOS e Android) e documentação de **consumo**.
+- Documentação principal de cada plataforma vive ao lado do binário:
+  - iOS: [`ios/README.md`](mdc:ios/README.md), [`ios/DISTRIBUTION.md`](mdc:ios/DISTRIBUTION.md)
+  - Android: [`android/README.md`](mdc:android/README.md)
+- A capa e visão geral fica em [`README.md`](mdc:README.md) e [`docs/README.md`](mdc:docs/README.md).
+
+## Onde atualizar
+
+- Mudou a **versão publicada**: atualizar `README.md` + plataforma específica (`ios/` ou `android/`).
+- Mudou o **modo de consumo** (Swift Package, Maven, Gradle): atualizar a doc da plataforma.
+- Documento transversal/comparativo: criar em `docs/`.
+
+## Onde NÃO mexer
+
+- Código-fonte do SDK: vai em [`HUG-ID-IOS`](/Users/guilherme/sourcecode/HUG-ID-IOS) ou [`HUG-ID-ANDROID`](/Users/guilherme/sourcecode/HUG-ID-ANDROID).
+- Backend: vai em [`HUG-IdentityService`](/Users/guilherme/sourcecode/HUG-IdentityService).
