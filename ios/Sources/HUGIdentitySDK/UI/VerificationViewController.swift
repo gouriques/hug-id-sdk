@@ -4,6 +4,7 @@ import AVKit
 final class VerificationViewController: UIViewController {
     private enum Step {
         case loading
+        case sessionError(String)
         case takePhoto(sessionId: String)
         case enterCode(sessionId: String)
         case success
@@ -205,6 +206,17 @@ final class VerificationViewController: UIViewController {
             buttonConfirm.isHidden = true
             confirmWrapper.isHidden = true
             confirmTapOverlay?.isHidden = true
+        case .sessionError(let message):
+            labelStatus.text = message
+            labelDestination.text = nil
+            labelDestination.isHidden = true
+            buttonPhoto.isHidden = true
+            photoWrapper.isHidden = true
+            photoTapOverlay?.isHidden = true
+            fieldCode.isHidden = true
+            buttonConfirm.isHidden = true
+            confirmWrapper.isHidden = true
+            confirmTapOverlay?.isHidden = true
         case .takePhoto:
             labelStatus.text = "Tire uma selfie para enviar."
             labelDestination.text = nil
@@ -260,13 +272,19 @@ final class VerificationViewController: UIViewController {
                 updateUI()
             } catch {
                 labelStatus.text = "Erro ao criar sessão: \(error.localizedDescription)"
-                step = .takePhoto(sessionId: "")
+                sessionId = ""
+                step = .sessionError("Erro ao criar sessão: \(error.localizedDescription)")
                 updateUI()
             }
         }
     }
 
     @objc private func sendPhotoTapped() {
+        guard !sessionId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            labelStatus.text = "Não foi possível criar a sessão HUG-ID. Tente abrir a verificação novamente."
+            return
+        }
+
         if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 DispatchQueue.main.async {

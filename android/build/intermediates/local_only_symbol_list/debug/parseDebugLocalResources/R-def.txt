@@ -1,0 +1,12 @@
+R_DEF: Internal format may change without notice
+local
+color hug_identity_primary
+id buttonConfirm
+id buttonPhoto
+id codeField
+id destinationText
+id photoSection
+id statusText
+layout activity_verification
+style Theme.HugIdentity.Verification
+xml file_paths

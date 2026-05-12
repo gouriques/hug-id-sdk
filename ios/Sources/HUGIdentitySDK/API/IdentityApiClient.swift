@@ -47,6 +47,7 @@ final class IdentityApiClient {
         var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionId, forHTTPHeaderField: "X-Verification-Session-Id")
         setAuth(&request)
         var body = Data()
         body.append("--\(boundary)\r\n".data(using: .utf8)!)

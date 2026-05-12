@@ -1,0 +1,11 @@
+com.hug.identity.sdk
+color hug_identity_primary
+id buttonConfirm
+id buttonPhoto
+id codeField
+id destinationText
+id photoSection
+id statusText
+layout activity_verification
+style Theme_HugIdentity_Verification
+xml file_paths

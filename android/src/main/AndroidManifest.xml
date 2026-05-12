@@ -7,7 +7,7 @@
 
     <application>
         <provider
-            android:name="androidx.core.content.FileProvider"
+            android:name=".ui.HugIdentityFileProvider"
             android:authorities="${applicationId}.hugidentity.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">

@@ -7,7 +7,7 @@ let package = Package(
         .iOS(.v14)
     ],
     products: [
-        .library(name: "HUGIdentitySDK", targets: ["HUGIdentitySDK"]),
+        .library(name: "HUGIdentitySDK", type: .dynamic, targets: ["HUGIdentitySDK"]),
     ],
     targets: [
         .target(

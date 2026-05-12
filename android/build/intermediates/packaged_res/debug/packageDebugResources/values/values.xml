@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="hug_identity_primary">#1976D2</color>
+    <style name="Theme.HugIdentity.Verification" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/hug_identity_primary</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>

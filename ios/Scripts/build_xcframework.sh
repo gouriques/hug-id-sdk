@@ -31,8 +31,8 @@ xcodebuild archive \
 echo "Creating XCFramework..."
 rm -rf "$XCFRAMEWORK"
 xcodebuild -create-xcframework \
-  -framework "$ARCHIVE_IOS/Products/Library/Frameworks/${PKG_NAME}.framework" \
-  -framework "$ARCHIVE_SIM/Products/Library/Frameworks/${PKG_NAME}.framework" \
+  -framework "$ARCHIVE_IOS/Products/usr/local/lib/${PKG_NAME}.framework" \
+  -framework "$ARCHIVE_SIM/Products/usr/local/lib/${PKG_NAME}.framework" \
   -output "$XCFRAMEWORK"
 
 echo "Done: $XCFRAMEWORK"
