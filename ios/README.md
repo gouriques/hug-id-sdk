@@ -21,14 +21,14 @@ Para publicar uma versão, crie uma tag no repositório (ex.: `git tag 1.0.0 && 
 Adicione ao seu projeto (Xcode: File → Add Package Dependencies) a URL do repositório, por exemplo:
 
 ```
-https://github.com/SEU_ORG/HUG-ID-IOS
+https://github.com/gouriques/hug-id-sdk
 ```
 
 Ou no `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<org>/HUG-ID-IOS", from: "1.0.0"),
+    .package(url: "https://github.com/gouriques/hug-id-sdk", from: "1.0.0"),
 ],
 targets: [
     .target(name: "SeuApp", dependencies: ["HUGIdentitySDK"]),
@@ -85,8 +85,15 @@ O código é enviado por **um único canal** por solicitação: prioridade e-mai
 ## Build
 
 ```bash
+# No repositório de origem:
 cd HUG-ID-IOS
-swift build
+xcodebuild -scheme HUGIdentitySDK -destination 'generic/platform=iOS Simulator' build
+
+# No repositório de distribuição:
+cd hug-id-sdk
+xcodebuild -scheme HUGIdentitySDK -destination 'generic/platform=iOS Simulator' build
 ```
 
-Para compilar para iOS (device/simulator), use Xcode abrindo a pasta do pacote ou adicione o pacote como dependência em um app e faça o build pelo Xcode.
+Como o SDK usa UIKit, valide com `xcodebuild` para iOS (device/simulator) ou pelo Xcode. `swift build` puro usa o destino macOS por padrão e não é a validação correta para este pacote.
+
+Para publicar no repositório consumido pelos apps, use `docs/PUBLICAR_SDK_NO_GIT.md` no `HUG-ID-IOS` ou `docs/PUBLICACAO_SDKS.md` no `hug-id-sdk`.

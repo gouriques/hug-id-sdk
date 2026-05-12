@@ -1,6 +1,6 @@
 # HUG Identity SDK (repositório unificado)
 
-Repositório de **distribuição** dos SDKs de verificação de identidade do **HUG-Identity Service** para iOS e Android. O código-fonte dos SDKs é desenvolvido nos repositórios **HUG-ID-IOS** e **HUG-ID-ANDROID**; os pipelines (Azure DevOps) sincronizam automaticamente para as pastas `ios/` e `android/` deste repositório.
+Repositório de **distribuição** dos SDKs de verificação de identidade do **HUG-Identity Service** para iOS e Android. O código-fonte principal é desenvolvido nos repositórios **HUG-ID-IOS** e **HUG-ID-ANDROID**; este repo mantém a cópia consumida pelos apps em `ios/` e `android/`, além de binários opcionais quando a distribuição fechada for adotada.
 
 ## Estrutura
 
@@ -35,9 +35,21 @@ Os SDKs consomem a API do **HUG-Identity Service** (session, photo, confirm, sta
 
 ## Build
 
-- **iOS:** `cd ios && swift build` ou abrir o pacote no Xcode. Ver [ios/DISTRIBUTION.md](ios/DISTRIBUTION.md) para XCFramework.
-- **Android:** `cd android && ./gradlew assembleDebug` (ou pelo Android Studio).
+- **iOS:** `xcodebuild -scheme HUGIdentitySDK -destination 'generic/platform=iOS Simulator' build` ou abrir o pacote no Xcode. Ver [ios/DISTRIBUTION.md](ios/DISTRIBUTION.md) para XCFramework.
+- **Android:** abrir `android/` no Android Studio ou usar Gradle/Gradle Wrapper disponível (`gradle assembleDebug` ou `./gradlew assembleDebug`).
+
+## Publicação
+
+Para sincronizar os repositórios de origem e validar antes do commit:
+
+```bash
+./scripts/sync_from_source_repos.sh
+xcodebuild -scheme HUGIdentitySDK -destination 'generic/platform=iOS Simulator' build
+# Android: valide pelo Android Studio ou rode gradle assembleDebug/./gradlew assembleDebug se disponível.
+```
+
+Detalhes do procedimento manual e dos artefatos binários opcionais estão em [docs/PUBLICACAO_SDKS.md](docs/PUBLICACAO_SDKS.md).
 
 ## Sincronização a partir dos repositórios de origem
 
-A publicação neste repositório é feita automaticamente pelos pipelines dos projetos **HUG-ID-IOS** e **HUG-ID-ANDROID** no Azure DevOps (push em `main`/`master`). Para publicação manual, use os scripts nos repositórios de origem: [HUG-ID-IOS/doc/PUBLICAR_SDK_NO_GIT.md](https://github.com/gouriques/HUG-ID-IOS/blob/master/doc/PUBLICAR_SDK_NO_GIT.md) e equivalente no Android.
+A publicação neste repositório pode ser feita pelos pipelines dos projetos **HUG-ID-IOS** e **HUG-ID-ANDROID** no Azure DevOps (push em `main`/`master`) ou manualmente com os scripts locais. Para publicação manual, use [docs/PUBLICACAO_SDKS.md](docs/PUBLICACAO_SDKS.md) e os documentos dos repositórios de origem: [HUG-ID-IOS/docs/PUBLICAR_SDK_NO_GIT.md](https://github.com/gouriques/HUG-ID-IOS/blob/master/docs/PUBLICAR_SDK_NO_GIT.md) e [HUG-ID-ANDROID/docs/PUBLICAR_SDK_NO_GIT.md](https://github.com/gouriques/HUG-ID-ANDROID/blob/master/docs/PUBLICAR_SDK_NO_GIT.md).

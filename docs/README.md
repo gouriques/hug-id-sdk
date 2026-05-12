@@ -1,8 +1,8 @@
 # hug-id-sdk — Distribuição dos SDKs HUG-ID
 
-Repositório que **publica os SDKs compilados** (iOS e Android) do HUG-Identity. Os apps HUGDoctor-iOS e HUGDoctor-Android, e clientes externos, consomem este repositório como dependência via Git.
+Repositório que **distribui os SDKs HUG-ID** (iOS e Android). Os apps HUGDoctor-iOS e HUGDoctor-Android, e clientes externos, consomem este repositório como dependência via Git.
 
-> Este repositório **não contém código-fonte**, apenas artefatos compilados e documentação de consumo. O código-fonte mora em [HUG-ID-IOS](/Users/guilherme/sourcecode/HUG-ID-IOS) e [HUG-ID-ANDROID](/Users/guilherme/sourcecode/HUG-ID-ANDROID); o backend está em [HUG-IdentityService](/Users/guilherme/sourcecode/HUG-IdentityService).
+> Este repositório contém a **cópia distribuída** do código-fonte em `ios/` e `android/`, além de binários opcionais quando a distribuição fechada for adotada. O código-fonte principal mora em [HUG-ID-IOS](/Users/guilherme/sourcecode/HUG-ID-IOS) e [HUG-ID-ANDROID](/Users/guilherme/sourcecode/HUG-ID-ANDROID); o backend está em [HUG-IdentityService](/Users/guilherme/sourcecode/HUG-IdentityService).
 
 ## Documentos
 
@@ -10,6 +10,7 @@ Repositório que **publica os SDKs compilados** (iOS e Android) do HUG-Identity.
 - [`../ios/README.md`](../ios/README.md) — guia de consumo do SDK iOS via Swift Package Manager.
 - [`../ios/DISTRIBUTION.md`](../ios/DISTRIBUTION.md) — detalhes de distribuição do binário iOS.
 - [`../android/README.md`](../android/README.md) — guia de consumo do SDK Android.
+- [`PUBLICACAO_SDKS.md`](PUBLICACAO_SDKS.md) — procedimento manual de sincronização, validação e publicação.
 
 ## Onde está cada coisa
 

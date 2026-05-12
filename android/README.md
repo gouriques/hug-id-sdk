@@ -16,7 +16,7 @@ Inclua o módulo no `settings.gradle` (se estiver no mesmo repositório):
 
 ```gradle
 include ':hug-identity-sdk'
-project(':hug-identity-sdk').projectDir = new File('../HUG-ID-ANDROID')
+project(':hug-identity-sdk').projectDir = new File('../hug-id-sdk/android')
 ```
 
 No `build.gradle` do app:
@@ -32,6 +32,8 @@ Ou publique o AAR em um repositório Maven e use:
 ```gradle
 implementation 'com.hug.identity:sdk:1.0.0'
 ```
+
+O consumo atual no ecossistema HUG é por módulo Gradle/fonte em `hug-id-sdk/android`. Publique alterações a partir do `HUG-ID-ANDROID` seguindo `docs/PUBLICAR_SDK_NO_GIT.md`; no `hug-id-sdk`, veja `docs/PUBLICACAO_SDKS.md`. Não publique `android/build/` no Git.
 
 ## Uso
 

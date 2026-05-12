@@ -39,4 +39,5 @@ if [ -d "$REPO_ROOT/Scripts" ]; then
 fi
 
 echo "Concluído: conteúdo iOS copiado para $IOS_DEST"
-echo "Próximo passo: no hug-id-sdk, faça git add ios/ && git commit && git push"
+echo "Próximo passo: no hug-id-sdk, valide o build e faça git add ios/ Package.swift && git commit && git push"
+echo "Opcional: para binário iOS, rode cd ios && ./Scripts/build_xcframework.sh"

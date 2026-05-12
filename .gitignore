@@ -1,0 +1,25 @@
+.build/
+
+# Android/Gradle local build outputs.
+.gradle/
+android/.gradle/
+android/build/
+
+# Xcode and SwiftPM local outputs.
+DerivedData/
+ios/.build/
+ios/.swiftpm/
+ios/ios/
+ios/build/*.xcarchive/
+ios/build/DerivedData*/
+
+# Keep distributable iOS binaries when intentionally generated.
+!ios/build/
+!ios/build/HUGIdentitySDK.xcframework/
+!ios/build/HUGIdentitySDK.xcframework/**
+!ios/build/HUGIdentitySDK.xcframework.zip
+
+# IDE/user-local metadata.
+*.xcuserstate
+xcuserdata/
+.DS_Store
