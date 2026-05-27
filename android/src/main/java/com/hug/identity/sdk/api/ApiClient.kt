@@ -23,6 +23,14 @@ internal object ApiClient {
                         chain.proceed(request)
                     })
                 }
+                config.apimSubscriptionKey?.takeIf { it.isNotBlank() }?.let { key ->
+                    addInterceptor(Interceptor { chain ->
+                        val request = chain.request().newBuilder()
+                            .addHeader("Ocp-Apim-Subscription-Key", key)
+                            .build()
+                        chain.proceed(request)
+                    })
+                }
             }
             .build()
         val retrofit = Retrofit.Builder()

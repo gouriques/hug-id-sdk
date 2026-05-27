@@ -20,6 +20,7 @@ object IdentityService {
     private const val EXTRA_USER_ID = "hug_identity_user_id"
     private const val EXTRA_EMAIL = "hug_identity_email"
     private const val EXTRA_PHONE = "hug_identity_phone"
+    private const val EXTRA_APIM_KEY = "hug_identity_apim_key"
     const val EXTRA_RESULT = "hug_identity_result" // "success" | "cancelled" | "failure"
     const val EXTRA_ERROR_MESSAGE = "hug_identity_error_message"
 
@@ -40,6 +41,7 @@ object IdentityService {
             putExtra(EXTRA_USER_ID, config.userId)
             putExtra(EXTRA_EMAIL, config.email)
             putExtra(EXTRA_PHONE, config.phone)
+            putExtra(EXTRA_APIM_KEY, config.apimSubscriptionKey)
         }
         activity.startActivityForResult(intent, requestCode)
     }
@@ -57,6 +59,7 @@ object IdentityService {
             putExtra(EXTRA_USER_ID, config.userId)
             putExtra(EXTRA_EMAIL, config.email)
             putExtra(EXTRA_PHONE, config.phone)
+            putExtra(EXTRA_APIM_KEY, config.apimSubscriptionKey)
         }
     }
 
@@ -88,6 +91,7 @@ object IdentityService {
         return IdentityServiceConfig(
             baseURL = baseURL,
             authorizationToken = intent.getStringExtra(EXTRA_TOKEN),
+            apimSubscriptionKey = intent.getStringExtra(EXTRA_APIM_KEY),
             userId = userId,
             email = email,
             phone = phone
