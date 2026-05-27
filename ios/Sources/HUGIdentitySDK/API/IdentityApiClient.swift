@@ -70,6 +70,36 @@ final class IdentityApiClient {
         return decoded.maskedDestination
     }
 
+    func recordSessionLocation(
+        sessionId: String,
+        userId: String,
+        context: String,
+        sample: DeviceLocationSample
+    ) async throws {
+        guard let requestURL = url("v1/verification/session/location") else { throw IdentityServiceError.invalidURL }
+        var request = URLRequest(url: requestURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        setAuth(&request)
+        let body = SessionLocationBody(
+            verificationSessionId: sessionId,
+            userId: userId,
+            contexto: context,
+            latitude: sample.latitude,
+            longitude: sample.longitude,
+            accuracyMetros: sample.accuracyMeters,
+            fonte: sample.source,
+            capturadoEm: ISO8601DateFormatter().string(from: sample.capturedAt)
+        )
+        request.httpBody = try JSONEncoder().encode(body)
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw IdentityServiceError.invalidResponse }
+        guard http.statusCode == 200 else {
+            let msg = String(data: data, encoding: .utf8)
+            throw IdentityServiceError.apiError(statusCode: http.statusCode, message: msg)
+        }
+    }
+
     func confirmCode(sessionId: String, code: String) async throws {
         guard let requestURL = url("v1/verification/confirm") else { throw IdentityServiceError.invalidURL }
         var request = URLRequest(url: requestURL)
@@ -115,4 +145,15 @@ private struct ConfirmBody: Encodable {
 private struct ConfirmResponse: Decodable {
     let verified: Bool
     let reason: String?
+}
+
+private struct SessionLocationBody: Encodable {
+    let verificationSessionId: String
+    let userId: String
+    let contexto: String
+    let latitude: Double
+    let longitude: Double
+    let accuracyMetros: Double?
+    let fonte: String
+    let capturadoEm: String
 }

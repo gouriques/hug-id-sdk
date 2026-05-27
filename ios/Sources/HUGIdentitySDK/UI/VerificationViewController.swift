@@ -41,6 +41,7 @@ final class VerificationViewController: UIViewController {
     private let confirmWrapper = UIView()
     private var photoTapOverlay: UIView?
     private var confirmTapOverlay: UIView?
+    private let locationCapture = DeviceLocationCapture()
 
     init(config: IdentityServiceConfig, completion: @escaping (VerificationResult) -> Void) {
         self.config = config
@@ -270,6 +271,7 @@ final class VerificationViewController: UIViewController {
                 maskedPhone = maskedP
                 step = .takePhoto(sessionId: id)
                 updateUI()
+                await submitLocationIfEnabled(context: "verification-session-start")
             } catch {
                 labelStatus.text = "Erro ao criar sessão: \(error.localizedDescription)"
                 sessionId = ""
@@ -322,12 +324,28 @@ final class VerificationViewController: UIViewController {
         Task { @MainActor in
             do {
                 maskedDestinationFromPhoto = try await api.uploadPhoto(sessionId: sessionId, imageData: data)
+                await submitLocationIfEnabled(context: "verification-photo-uploaded")
                 step = .enterCode(sessionId: sessionId)
                 updateUI()
             } catch {
                 labelStatus.text = "Erro: \(error.localizedDescription)"
             }
             buttonPhoto.isEnabled = true
+        }
+    }
+
+    private func submitLocationIfEnabled(context: String) async {
+        guard config.enableLocationSignals, !sessionId.isEmpty else { return }
+        guard let sample = await locationCapture.capture(from: self) else { return }
+        do {
+            try await api.recordSessionLocation(
+                sessionId: sessionId,
+                userId: config.userId,
+                context: context,
+                sample: sample
+            )
+        } catch {
+            // Best-effort: não bloqueia o fluxo de verificação.
         }
     }
 
@@ -342,6 +360,7 @@ final class VerificationViewController: UIViewController {
         Task { @MainActor in
             do {
                 try await api.confirmCode(sessionId: sessionId, code: String(code.prefix(6)))
+                await submitLocationIfEnabled(context: "verification-code-confirmed")
                 step = .success
                 updateUI()
                 dismiss(animated: true) { [weak self] in self?.completion(.success) }
