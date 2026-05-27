@@ -28,7 +28,7 @@ ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManife
 		ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:6:19-63
 application
 ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:8:5-23:19
-provider#com.hug.identity.sdk.ui.HugIdentityFileProvider
+provider#androidx.core.content.FileProvider
 ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:9:9-17:20
 	android:grantUriPermissions
 		ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:13:13-47
@@ -37,13 +37,13 @@ ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManife
 	android:exported
 		ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:12:13-37
 	android:name
-		ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:10:13-55
-meta-data#androidx.core.FILE_PROVIDER_PATHS
+		ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:10:13-62
+meta-data#android.support.FILE_PROVIDER_PATHS
 ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:14:13-16:54
 	android:resource
 		ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:16:17-51
 	android:name
-		ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:15:17-65
+		ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:15:17-67
 activity#com.hug.identity.sdk.ui.VerificationActivity
 ADDED from /Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:18:9-22:69
 	android:screenOrientation

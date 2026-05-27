@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="hug_identity_primary">#1976D2</color>
+    <string name="hug_identity_camera_permission_denied">Permissão de câmera negada.</string>
+    <string name="hug_identity_camera_permission_rationale">O HUG-ID precisa da câmera para tirar a selfie de verificação.</string>
+    <string name="hug_identity_camera_permission_settings">Ative a permissão de câmera nas configurações do app para continuar a verificação HUG-ID.</string>
+    <string name="hug_identity_open_settings">Abrir configurações</string>
     <style name="Theme.HugIdentity.Verification" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/hug_identity_primary</item>
         <item name="android:windowBackground">@android:color/white</item>

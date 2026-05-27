@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -40,9 +41,13 @@ public final class ActivityVerificationBinding implements ViewBinding {
   @NonNull
   public final TextView statusText;
 
+  @NonNull
+  public final ProgressBar uploadProgress;
+
   private ActivityVerificationBinding(@NonNull ScrollView rootView, @NonNull Button buttonConfirm,
       @NonNull Button buttonPhoto, @NonNull EditText codeField, @NonNull TextView destinationText,
-      @NonNull LinearLayout photoSection, @NonNull TextView statusText) {
+      @NonNull LinearLayout photoSection, @NonNull TextView statusText,
+      @NonNull ProgressBar uploadProgress) {
     this.rootView = rootView;
     this.buttonConfirm = buttonConfirm;
     this.buttonPhoto = buttonPhoto;
@@ -50,6 +55,7 @@ public final class ActivityVerificationBinding implements ViewBinding {
     this.destinationText = destinationText;
     this.photoSection = photoSection;
     this.statusText = statusText;
+    this.uploadProgress = uploadProgress;
   }
 
   @Override
@@ -115,8 +121,14 @@ public final class ActivityVerificationBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.uploadProgress;
+      ProgressBar uploadProgress = ViewBindings.findChildViewById(rootView, id);
+      if (uploadProgress == null) {
+        break missingId;
+      }
+
       return new ActivityVerificationBinding((ScrollView) rootView, buttonConfirm, buttonPhoto,
-          codeField, destinationText, photoSection, statusText);
+          codeField, destinationText, photoSection, statusText, uploadProgress);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

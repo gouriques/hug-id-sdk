@@ -6,6 +6,11 @@ id codeField
 id destinationText
 id photoSection
 id statusText
+id uploadProgress
 layout activity_verification
+string hug_identity_camera_permission_denied
+string hug_identity_camera_permission_rationale
+string hug_identity_camera_permission_settings
+string hug_identity_open_settings
 style Theme_HugIdentity_Verification
 xml file_paths

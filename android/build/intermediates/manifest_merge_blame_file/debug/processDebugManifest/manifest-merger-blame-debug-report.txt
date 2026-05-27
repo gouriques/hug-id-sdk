@@ -28,8 +28,8 @@
 17-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:8:5-23:19
 18        <provider
 18-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:9:9-17:20
-19            android:name="com.hug.identity.sdk.ui.HugIdentityFileProvider"
-19-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:10:13-55
+19            android:name="androidx.core.content.FileProvider"
+19-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:10:13-62
 20            android:authorities="${applicationId}.hugidentity.fileprovider"
 20-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:11:13-76
 21            android:exported="false"
@@ -38,8 +38,8 @@
 22-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:13:13-47
 23            <meta-data
 23-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:14:13-16:54
-24                android:name="androidx.core.FILE_PROVIDER_PATHS"
-24-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:15:17-65
+24                android:name="android.support.FILE_PROVIDER_PATHS"
+24-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:15:17-67
 25                android:resource="@xml/file_paths" />
 25-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:16:17-51
 26        </provider>

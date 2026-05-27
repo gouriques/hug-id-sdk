@@ -16,12 +16,12 @@
 
     <application>
         <provider
-            android:name="com.hug.identity.sdk.ui.HugIdentityFileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.hugidentity.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true" >
             <meta-data
-                android:name="androidx.core.FILE_PROVIDER_PATHS"
+                android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
 
