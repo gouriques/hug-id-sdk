@@ -10,50 +10,56 @@
 8    <uses-permission android:name="android.permission.CAMERA" />
 8-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:4:5-65
 8-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:4:22-62
-9
-10    <uses-feature
-10-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:5:5-85
-11        android:name="android.hardware.camera"
-11-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:5:19-57
-12        android:required="false" />
-12-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:5:58-82
-13    <uses-feature
-13-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:6:5-91
-14        android:name="android.hardware.camera.front"
-14-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:6:19-63
-15        android:required="false" />
-15-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:6:64-88
-16
-17    <application>
-17-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:8:5-23:19
-18        <provider
-18-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:9:9-17:20
-19            android:name="androidx.core.content.FileProvider"
-19-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:10:13-62
-20            android:authorities="${applicationId}.hugidentity.fileprovider"
-20-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:11:13-76
-21            android:exported="false"
-21-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:12:13-37
-22            android:grantUriPermissions="true" >
-22-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:13:13-47
-23            <meta-data
-23-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:14:13-16:54
-24                android:name="android.support.FILE_PROVIDER_PATHS"
-24-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:15:17-67
-25                android:resource="@xml/file_paths" />
-25-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:16:17-51
-26        </provider>
-27
-28        <activity
-28-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:18:9-22:69
-29            android:name="com.hug.identity.sdk.ui.VerificationActivity"
-29-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:19:13-52
-30            android:exported="false"
-30-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:20:13-37
-31            android:screenOrientation="portrait"
-31-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:21:13-49
-32            android:theme="@style/Theme.HugIdentity.Verification" />
-32-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:22:13-66
-33    </application>
-34
-35</manifest>
+9    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+9-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:5:5-81
+9-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:5:22-78
+10    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+10-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:6:5-79
+10-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:6:22-76
+11
+12    <uses-feature
+12-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:7:5-85
+13        android:name="android.hardware.camera"
+13-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:7:19-57
+14        android:required="false" />
+14-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:7:58-82
+15    <uses-feature
+15-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:8:5-91
+16        android:name="android.hardware.camera.front"
+16-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:8:19-63
+17        android:required="false" />
+17-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:8:64-88
+18
+19    <application>
+19-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:10:5-25:19
+20        <provider
+20-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:11:9-19:20
+21            android:name="androidx.core.content.FileProvider"
+21-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:12:13-62
+22            android:authorities="${applicationId}.hugidentity.fileprovider"
+22-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:13:13-76
+23            android:exported="false"
+23-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:14:13-37
+24            android:grantUriPermissions="true" >
+24-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:15:13-47
+25            <meta-data
+25-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:16:13-18:54
+26                android:name="android.support.FILE_PROVIDER_PATHS"
+26-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:17:17-67
+27                android:resource="@xml/file_paths" />
+27-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:18:17-51
+28        </provider>
+29
+30        <activity
+30-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:20:9-24:69
+31            android:name="com.hug.identity.sdk.ui.VerificationActivity"
+31-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:21:13-52
+32            android:exported="false"
+32-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:22:13-37
+33            android:screenOrientation="portrait"
+33-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:23:13-49
+34            android:theme="@style/Theme.HugIdentity.Verification" />
+34-->/Users/guilherme/sourcecode/hug-id-sdk/android/src/main/AndroidManifest.xml:24:13-66
+35    </application>
+36
+37</manifest>
