@@ -88,10 +88,9 @@ launcher.launch(IdentityService.createVerificationIntent(this, config))
 
 ## Contrato do backend
 
-- `POST /v1/verification/session` – cria sessão. Retorna `availableChannels[]` (sms/email/whatsapp com rota ativa).
-- `POST /v1/verification/photo` – envia selfie; **não** envia OTP (status → `pending_send`).
-- `POST /v1/verification/send-code` – envia OTP no `channel` escolhido (purpose **OTP 3**).
+- `POST /v1/verification/session` – cria sessão (userId, email, phone). Retorna `verificationSessionId`, `expiresAt`, `maskedEmail`, `maskedPhone`.
+- `POST /v1/verification/photo` – envia foto (multipart). Retorna `accepted`, `maskedDestination` (destino onde o código foi enviado).
 - `POST /v1/verification/confirm` – confirma código.
-- `GET /v1/verification/status` – status da sessão.
+- `GET /v1/verification/status?verificationSessionId=...` – status da sessão (opcional).
 
-Fluxo UI: selfie → cards de canal → Enviar código → digitar OTP (reenvio com cooldown 60s). Documentação: [HUG-IdentityService](https://github.com/gouriques/HUG-IdentityService).
+O código é enviado por um único canal (e-mail com prioridade; SMS se necessário). Documentação do serviço: [HUG-IdentityService](https://github.com/gouriques/HUG-IdentityService) / spec em `spec/`.
