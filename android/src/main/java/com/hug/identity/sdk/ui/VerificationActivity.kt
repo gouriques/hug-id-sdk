@@ -8,10 +8,15 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -27,14 +32,17 @@ import com.hug.identity.sdk.IdentityService
 import com.hug.identity.sdk.IdentityServiceConfig
 import com.hug.identity.sdk.R
 import com.hug.identity.sdk.api.ApiClient
+import com.hug.identity.sdk.api.dto.AvailableChannelDto
 import com.hug.identity.sdk.api.dto.ConfirmRequest
 import com.hug.identity.sdk.api.dto.CreateSessionRequest
 import com.hug.identity.sdk.api.dto.PhotoResponse
+import com.hug.identity.sdk.api.dto.SendCodeRequest
 import com.hug.identity.sdk.api.dto.SessionLocationRequest
 import com.hug.identity.sdk.location.DeviceLocationHelper
 import com.hug.identity.sdk.location.DeviceLocationSample
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -49,16 +57,20 @@ import java.util.TimeZone
 import kotlin.coroutines.resume
 import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlinx.coroutines.suspendCancellableCoroutine
 
+/**
+ * Fluxo Token HUG-ID: sessão → selfie → escolha de canal OTP (purpose 3) → código → sucesso.
+ */
 class VerificationActivity : AppCompatActivity() {
 
     private var config: IdentityServiceConfig? = null
     private var sessionId: String = ""
-    private var maskedEmail: String? = null
-    private var maskedPhone: String? = null
-    private var maskedDestinationFromPhoto: String? = null
+    private var availableChannels: List<AvailableChannelDto> = emptyList()
+    private var selectedChannel: String? = null
+    private var maskedDestination: String? = null
     private var photoFile: File? = null
+    private var resendTimer: CountDownTimer? = null
+    private var resendSecondsLeft: Int = 0
 
     private val requestCameraPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -89,7 +101,7 @@ class VerificationActivity : AppCompatActivity() {
         locationPermissionContinuation = null
     }
 
-    private enum class Step { LOADING, TAKE_PHOTO, UPLOADING, ENTER_CODE, SUCCESS }
+    private enum class Step { LOADING, TAKE_PHOTO, UPLOADING, CHOOSE_CHANNEL, ENTER_CODE, SUCCESS }
 
     private var step = Step.LOADING
 
@@ -109,6 +121,11 @@ class VerificationActivity : AppCompatActivity() {
         startSession()
     }
 
+    override fun onDestroy() {
+        resendTimer?.cancel()
+        super.onDestroy()
+    }
+
     override fun onSupportNavigateUp(): Boolean {
         setResult(RESULT_CANCELED)
         finish()
@@ -118,10 +135,11 @@ class VerificationActivity : AppCompatActivity() {
     private fun setupListeners() {
         findViewById<View>(R.id.buttonPhoto).setOnClickListener { pickOrTakePhoto() }
         findViewById<View>(R.id.buttonConfirm).setOnClickListener { confirmCode() }
+        findViewById<View>(R.id.buttonSendCode).setOnClickListener { sendCode() }
+        findViewById<View>(R.id.buttonSendNewCode).setOnClickListener { sendCode() }
     }
 
     private fun startSession() {
-        maskedDestinationFromPhoto = null
         val cfg = config ?: return
         val api = ApiClient.createApi(cfg)
         lifecycleScope.launch {
@@ -142,8 +160,10 @@ class VerificationActivity : AppCompatActivity() {
                         return@launch
                     }
                     sessionId = body.verificationSessionId
-                    maskedEmail = body.maskedEmail
-                    maskedPhone = body.maskedPhone
+                    availableChannels = resolveChannels(body.availableChannels, body.maskedEmail, body.maskedPhone)
+                    if (availableChannels.size == 1) {
+                        selectedChannel = availableChannels[0].channel
+                    }
                     step = Step.TAKE_PHOTO
                     updateUI()
                     submitLocationIfEnabled("verification-session-start")
@@ -156,68 +176,130 @@ class VerificationActivity : AppCompatActivity() {
         }
     }
 
+    private fun resolveChannels(
+        fromApi: List<AvailableChannelDto>?,
+        maskedEmail: String?,
+        maskedPhone: String?
+    ): List<AvailableChannelDto> {
+        if (!fromApi.isNullOrEmpty()) return fromApi
+        val fallback = mutableListOf<AvailableChannelDto>()
+        if (!maskedEmail.isNullOrBlank()) {
+            fallback.add(AvailableChannelDto("email", maskedEmail))
+        }
+        if (!maskedPhone.isNullOrBlank()) {
+            fallback.add(AvailableChannelDto("sms", maskedPhone))
+        }
+        return fallback
+    }
+
     private fun updateUI() {
         if (isFinishing) return
         val statusText = findViewById<TextView>(R.id.statusText)
-        val destinationText = findViewById<TextView>(R.id.destinationText)
         val photoSection = findViewById<View>(R.id.photoSection)
-        val codeField = findViewById<android.widget.EditText>(R.id.codeField)
+        val channelSection = findViewById<View>(R.id.channelSection)
+        val codeField = findViewById<EditText>(R.id.codeField)
         val buttonConfirm = findViewById<View>(R.id.buttonConfirm)
         val buttonPhoto = findViewById<View>(R.id.buttonPhoto)
+        val buttonSendCode = findViewById<Button>(R.id.buttonSendCode)
         val uploadProgress = findViewById<ProgressBar>(R.id.uploadProgress)
+        val resendRow = findViewById<View>(R.id.resendRow)
+        val buttonSendNewCode = findViewById<View>(R.id.buttonSendNewCode)
 
         when (step) {
             Step.LOADING -> {
-                statusText.text = "Criando sessão..."
-                destinationText.visibility = View.GONE
+                statusText.text = "Preparando verificação..."
                 photoSection.visibility = View.GONE
+                channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
+                resendRow.visibility = View.GONE
+                buttonSendNewCode.visibility = View.GONE
                 uploadProgress.visibility = View.GONE
             }
             Step.TAKE_PHOTO -> {
-                statusText.text = "Tire uma selfie para enviar."
-                destinationText.visibility = View.GONE
+                statusText.text = "Tire uma selfie para comprovar sua identidade e ativar o Token."
                 photoSection.visibility = View.VISIBLE
+                channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
+                resendRow.visibility = View.GONE
+                buttonSendNewCode.visibility = View.GONE
                 buttonPhoto.isEnabled = true
                 uploadProgress.visibility = View.GONE
             }
             Step.UPLOADING -> {
                 statusText.text = "Enviando foto... Aguarde."
-                destinationText.visibility = View.GONE
                 photoSection.visibility = View.VISIBLE
+                channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
+                resendRow.visibility = View.GONE
+                buttonSendNewCode.visibility = View.GONE
                 buttonPhoto.isEnabled = false
                 uploadProgress.visibility = View.VISIBLE
             }
-            Step.ENTER_CODE -> {
-                statusText.text = "Digite o código recebido por e-mail ou SMS."
-                val dest = maskedDestinationFromPhoto?.takeIf { it.isNotBlank() }
-                destinationText.text = when {
-                    dest != null -> "Código enviado para: $dest"
-                    else -> {
-                        val parts = listOfNotNull(maskedEmail, maskedPhone).filter { it.isNotBlank() }
-                        if (parts.isEmpty()) "" else "Código enviado para: ${parts.joinToString(" e ")}"
-                    }
+            Step.CHOOSE_CHANNEL -> {
+                statusText.text = if (availableChannels.isEmpty()) {
+                    "Nenhum canal de envio está disponível no momento. Tente novamente mais tarde."
+                } else {
+                    "Escolha onde deseja receber o código"
                 }
-                destinationText.visibility =
-                    if (destinationText.text.isNullOrBlank()) View.GONE else View.VISIBLE
                 photoSection.visibility = View.GONE
+                channelSection.visibility = View.VISIBLE
+                renderChannelCards()
+                buttonSendCode.isEnabled = selectedChannel != null && availableChannels.isNotEmpty()
+                buttonSendCode.alpha = if (buttonSendCode.isEnabled) 1f else 0.5f
+                codeField.visibility = View.GONE
+                buttonConfirm.visibility = View.GONE
+                resendRow.visibility = View.GONE
+                buttonSendNewCode.visibility = View.GONE
+                uploadProgress.visibility = View.GONE
+            }
+            Step.ENTER_CODE -> {
+                statusText.text = maskedDestination
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { "Digite o código enviado para $it" }
+                    ?: "Digite o código recebido"
+                photoSection.visibility = View.GONE
+                channelSection.visibility = View.GONE
                 codeField.visibility = View.VISIBLE
                 buttonConfirm.visibility = View.VISIBLE
                 uploadProgress.visibility = View.GONE
+                updateResendVisibility()
             }
             Step.SUCCESS -> {
                 statusText.text = "Verificação concluída."
-                destinationText.visibility = View.GONE
                 photoSection.visibility = View.GONE
+                channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
+                resendRow.visibility = View.GONE
+                buttonSendNewCode.visibility = View.GONE
                 uploadProgress.visibility = View.GONE
             }
+        }
+    }
+
+    private fun renderChannelCards() {
+        val container = findViewById<LinearLayout>(R.id.channelContainer)
+        container.removeAllViews()
+        val inflater = LayoutInflater.from(this)
+        for (option in availableChannels) {
+            val card = inflater.inflate(R.layout.item_channel_option, container, false)
+            card.findViewById<TextView>(R.id.channelTitle).text = option.displayTitle
+            card.findViewById<TextView>(R.id.channelDestination).text = option.maskedDestination.orEmpty()
+            val selected = option.channel.equals(selectedChannel, ignoreCase = true)
+            card.setBackgroundResource(
+                if (selected) R.drawable.bg_channel_card_selected else R.drawable.bg_channel_card
+            )
+            card.setOnClickListener {
+                selectedChannel = option.channel
+                renderChannelCards()
+                val send = findViewById<Button>(R.id.buttonSendCode)
+                send.isEnabled = true
+                send.alpha = 1f
+            }
+            container.addView(card)
         }
     }
 
@@ -382,9 +464,8 @@ class VerificationActivity : AppCompatActivity() {
                 }
                 when (uploadResult) {
                     is PhotoUploadResult.Success -> {
-                        maskedDestinationFromPhoto = uploadResult.maskedDestination
                         submitLocationIfEnabled("verification-photo-uploaded")
-                        step = Step.ENTER_CODE
+                        step = Step.CHOOSE_CHANNEL
                         updateUI()
                     }
                     is PhotoUploadResult.Error -> showUploadError(uploadResult.message)
@@ -393,6 +474,83 @@ class VerificationActivity : AppCompatActivity() {
                 Log.e(TAG, "uploadPhoto failed", e)
                 showUploadError("Erro de rede ao enviar foto: ${e.message ?: e.javaClass.simpleName}")
             }
+        }
+    }
+
+    private fun sendCode() {
+        val channel = selectedChannel
+        if (channel.isNullOrBlank()) {
+            Toast.makeText(this, "Selecione um canal para receber o código.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val cfg = config ?: return
+        val api = ApiClient.createApi(cfg)
+        findViewById<TextView>(R.id.statusText).text = "Enviando código..."
+        findViewById<View>(R.id.buttonSendCode).isEnabled = false
+        lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    api.sendCode(SendCodeRequest(verificationSessionId = sessionId, channel = channel))
+                }
+                if (response.isSuccessful && response.body()?.sent == true) {
+                    maskedDestination = response.body()?.maskedDestination
+                    startResendCooldown()
+                    step = Step.ENTER_CODE
+                    updateUI()
+                } else {
+                    val msg = response.body()?.error
+                        ?: response.errorBody()?.string()?.take(300)
+                        ?: "Não foi possível enviar o código."
+                    Toast.makeText(this@VerificationActivity, msg, Toast.LENGTH_LONG).show()
+                    if (step != Step.ENTER_CODE) {
+                        step = Step.CHOOSE_CHANNEL
+                        updateUI()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@VerificationActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                if (step != Step.ENTER_CODE) {
+                    step = Step.CHOOSE_CHANNEL
+                    updateUI()
+                }
+            }
+            if (!isFinishing) {
+                findViewById<View>(R.id.buttonSendCode).isEnabled = selectedChannel != null
+            }
+        }
+    }
+
+    private fun startResendCooldown() {
+        resendTimer?.cancel()
+        resendSecondsLeft = RESEND_COOLDOWN_SECONDS
+        updateResendVisibility()
+        resendTimer = object : CountDownTimer(RESEND_COOLDOWN_SECONDS * 1000L, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                resendSecondsLeft = (millisUntilFinished / 1000L).toInt()
+                updateResendVisibility()
+            }
+
+            override fun onFinish() {
+                resendSecondsLeft = 0
+                updateResendVisibility()
+            }
+        }.start()
+    }
+
+    private fun updateResendVisibility() {
+        if (step != Step.ENTER_CODE || isFinishing) return
+        val resendRow = findViewById<View>(R.id.resendRow)
+        val buttonSendNewCode = findViewById<View>(R.id.buttonSendNewCode)
+        val counter = findViewById<TextView>(R.id.resendCounter)
+        if (resendSecondsLeft > 0) {
+            val minutes = resendSecondsLeft / 60
+            val seconds = resendSecondsLeft % 60
+            counter.text = String.format(Locale.US, "%d:%02d", minutes, seconds)
+            resendRow.visibility = View.VISIBLE
+            buttonSendNewCode.visibility = View.GONE
+        } else {
+            resendRow.visibility = View.GONE
+            buttonSendNewCode.visibility = View.VISIBLE
         }
     }
 
@@ -417,13 +575,13 @@ class VerificationActivity : AppCompatActivity() {
         if (response.isSuccessful) {
             val body = response.body()
             if (body?.accepted == true) {
-                return PhotoUploadResult.Success(body.maskedDestination)
+                return PhotoUploadResult.Success
             }
             if (body == null) {
                 val raw = response.raw().peekBody(64 * 1024).string()
                 val parsed = runCatching { gson.fromJson(raw, PhotoResponse::class.java) }.getOrNull()
                 if (parsed?.accepted == true) {
-                    return PhotoUploadResult.Success(parsed.maskedDestination)
+                    return PhotoUploadResult.Success
                 }
             }
             return PhotoUploadResult.Error(
@@ -492,7 +650,7 @@ class VerificationActivity : AppCompatActivity() {
     }
 
     private fun confirmCode() {
-        val code = findViewById<android.widget.EditText>(R.id.codeField).text?.toString()?.trim() ?: ""
+        val code = findViewById<EditText>(R.id.codeField).text?.toString()?.trim() ?: ""
         if (code.length < 6) {
             Toast.makeText(this, "Digite o código de 6 dígitos.", Toast.LENGTH_SHORT).show()
             return
@@ -528,7 +686,7 @@ class VerificationActivity : AppCompatActivity() {
     }
 
     private sealed class PhotoUploadResult {
-        data class Success(val maskedDestination: String?) : PhotoUploadResult()
+        data object Success : PhotoUploadResult()
         data class Error(val message: String) : PhotoUploadResult()
     }
 
@@ -546,7 +704,6 @@ class VerificationActivity : AppCompatActivity() {
                     api.recordSessionLocation(sample.toRequest(cfg.userId, sessionId, context))
                 }
             }
-            // Best-effort: falhas de localização não bloqueiam a verificação.
         }
     }
 
@@ -598,5 +755,6 @@ class VerificationActivity : AppCompatActivity() {
         private val gson = Gson()
         private const val MAX_UPLOAD_DIMENSION_PX = 1280
         private const val JPEG_QUALITY = 85
+        private const val RESEND_COOLDOWN_SECONDS = 60
     }
 }

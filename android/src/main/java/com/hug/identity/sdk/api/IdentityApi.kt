@@ -5,6 +5,8 @@ import com.hug.identity.sdk.api.dto.ConfirmResponse
 import com.hug.identity.sdk.api.dto.CreateSessionRequest
 import com.hug.identity.sdk.api.dto.CreateSessionResponse
 import com.hug.identity.sdk.api.dto.PhotoResponse
+import com.hug.identity.sdk.api.dto.SendCodeRequest
+import com.hug.identity.sdk.api.dto.SendCodeResponse
 import com.hug.identity.sdk.api.dto.SessionLocationRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -27,6 +29,9 @@ internal interface IdentityApi {
         @Part("verificationSessionId") sessionId: RequestBody,
         @Part file: MultipartBody.Part
     ): Response<PhotoResponse>
+
+    @POST("v1/verification/send-code")
+    suspend fun sendCode(@Body body: SendCodeRequest): Response<SendCodeResponse>
 
     @POST("v1/verification/confirm")
     suspend fun confirmCode(@Body body: ConfirmRequest): Response<ConfirmResponse>

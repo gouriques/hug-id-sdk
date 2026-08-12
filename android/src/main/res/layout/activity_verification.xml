@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -9,41 +8,61 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="8dp"
+            android:text="Verificação HUG-ID"
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingVertical="16dp"
-            android:textSize="17sp"
-            android:text="Criando sessão..." />
+            android:paddingVertical="8dp"
+            android:text="Criando sessão..."
+            android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/destinationText"
+        <LinearLayout
+            android:id="@+id/channelSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingBottom="8dp"
-            android:textSize="13sp"
-            android:textColor="?android:attr/textColorSecondary"
-            android:visibility="gone" />
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/channelContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <Button
+                android:id="@+id/buttonSendCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Enviar código" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/photoSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:orientation="vertical"
-            android:visibility="gone"
-            android:gravity="center">
+            android:visibility="gone">
 
             <Button
                 android:id="@+id/buttonPhoto"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Enviar foto" />
+                android:text="Tirar minha foto" />
 
             <ProgressBar
                 android:id="@+id/uploadProgress"
@@ -60,9 +79,43 @@
             android:layout_marginTop="16dp"
             android:gravity="center"
             android:hint="000000"
+            android:importantForAutofill="yes"
             android:inputType="number"
             android:maxLength="6"
             android:textSize="28sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/resendRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/resendHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Não recebeu? Novo código em "
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/resendCounter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/buttonSendNewCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="8dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:text="Enviar novo código"
+            android:textAllCaps="false"
             android:visibility="gone" />
 
         <Button

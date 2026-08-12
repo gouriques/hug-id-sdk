@@ -31,7 +31,7 @@ Detalhes de instalação e uso em [android/README.md](android/README.md).
 
 ## Backend
 
-Os SDKs consomem a API do **HUG-Identity Service** (session, photo, confirm, status). Documentação e especificação das fases em: [HUG-IdentityService/spec](https://github.com/gouriques/HUG-IdentityService/tree/main/spec).
+Os SDKs consomem a API do **HUG-Identity Service** (`session`, `photo`, `send-code`, `confirm`, `status`) com escolha de canal OTP (e-mail/SMS/WhatsApp, purpose 3). Spec: [HUG-IdentityService/spec](https://github.com/gouriques/HUG-IdentityService/tree/main/spec).
 
 ## Build
 

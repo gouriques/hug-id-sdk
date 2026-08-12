@@ -75,12 +75,13 @@ IdentityService.startVerification(from: self, config: config) { result in
 
 O SDK consome a API do HUG-Identity Service:
 
-- `POST /v1/verification/session` – cria sessão (body: userId, email, phone). Retorna `verificationSessionId`, `expiresAt`, `maskedEmail`, `maskedPhone`.
-- `POST /v1/verification/photo` – envia foto (multipart: verificationSessionId, file). Retorna `accepted`, `maskedDestination` (destino mascarado onde o código foi enviado: e-mail ou SMS).
-- `POST /v1/verification/confirm` – confirma código (body: verificationSessionId, code).
-- `GET /v1/verification/status?verificationSessionId=...` – opcional; retorna status da sessão (`pending_photo`, `pending_code`, `verified`, `expired`).
+- `POST /v1/verification/session` – cria sessão. Retorna `availableChannels[]` (sms/email/whatsapp com rota ativa).
+- `POST /v1/verification/photo` – envia selfie; **não** envia OTP (status → `pending_send`).
+- `POST /v1/verification/send-code` – envia OTP no `channel` escolhido (purpose **OTP 3**).
+- `POST /v1/verification/confirm` – confirma código.
+- `GET /v1/verification/status` – status (`pending_photo` | `pending_send` | `pending_code` | `verified` | `expired`).
 
-O código é enviado por **um único canal** por solicitação: prioridade e-mail; SMS apenas se não houver e-mail ou se o envio por e-mail falhar. A tela de código exibe apenas o destino efetivo (`maskedDestination`).
+Fluxo UI: selfie → cards de canal → Enviar código → digitar OTP (reenvio com cooldown 60s).
 
 ## Build
 

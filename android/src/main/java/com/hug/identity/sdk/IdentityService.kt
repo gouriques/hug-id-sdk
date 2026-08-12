@@ -31,6 +31,10 @@ object IdentityService {
      * @param requestCode Código de requisição para onActivityResult
      */
     @JvmStatic
+    /**
+     * Inicia verificação HUG-ID: sessão → selfie → escolha de canal OTP → código.
+     * Propósito de mensageria no backend: OTP (3).
+     */
     fun startVerification(activity: Activity, config: IdentityServiceConfig, requestCode: Int) {
         if (config.userId.isBlank() || config.email.isBlank() || config.phone.isBlank()) {
             return

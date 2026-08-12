@@ -6,5 +6,6 @@ internal data class CreateSessionResponse(
     @SerializedName("verificationSessionId") val verificationSessionId: String,
     @SerializedName("expiresAt") val expiresAt: String,
     @SerializedName("maskedEmail") val maskedEmail: String? = null,
-    @SerializedName("maskedPhone") val maskedPhone: String? = null
+    @SerializedName("maskedPhone") val maskedPhone: String? = null,
+    @SerializedName("availableChannels") val availableChannels: List<AvailableChannelDto>? = null
 )
