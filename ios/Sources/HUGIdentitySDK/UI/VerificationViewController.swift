@@ -1,14 +1,18 @@
 import UIKit
 import AVKit
 
+/// Fluxo: sessão → selfie → escolha de canal OTP → código → sucesso.
 final class VerificationViewController: UIViewController {
     private enum Step {
         case loading
         case sessionError(String)
-        case takePhoto(sessionId: String)
-        case enterCode(sessionId: String)
+        case takePhoto
+        case chooseChannel
+        case enterCode
         case success
     }
+
+    private static let resendCooldownSeconds = 60
 
     private let config: IdentityServiceConfig
     private let api: IdentityApiClient
@@ -16,16 +20,20 @@ final class VerificationViewController: UIViewController {
 
     private var step: Step = .loading
     private var sessionId: String = ""
-    private var maskedEmail: String?
-    private var maskedPhone: String?
-    private var maskedDestinationFromPhoto: String?
+    private var availableChannels: [AvailableChannel] = []
+    private var selectedChannel: String?
+    private var maskedDestination: String?
+    private var resendSeconds = 0
+    private var resendTimer: Timer?
 
-    private let stack = UIStackView()
-    private let labelStatus = UILabel()
-    private let labelDestination = UILabel()
+    private let labelTitle = UILabel()
+    private let labelDescription = UILabel()
+    private let channelStack = UIStackView()
+    private var channelButtons: [ChannelOptionView] = []
+
     private let buttonPhoto = UIButton(type: .system)
-    private let photoWrapper = UIView()
-    private lazy var fieldCode: UITextField = {
+    private let buttonSendCode = UIButton(type: .system)
+    private let fieldCode: UITextField = {
         let f = UITextField()
         f.placeholder = "000000"
         f.keyboardType = .numberPad
@@ -37,10 +45,10 @@ final class VerificationViewController: UIViewController {
         return f
     }()
     private lazy var codeFieldDelegate = CodeFieldDelegate(maxDigits: 6)
-    private let buttonConfirm = UIButton(type: .system)
-    private let confirmWrapper = UIView()
+    private let labelSendNewCode = UILabel()
+    private let labelCounter = UILabel()
+    private let buttonSendNewCode = UIButton(type: .system)
     private var photoTapOverlay: UIView?
-    private var confirmTapOverlay: UIView?
     private let locationCapture = DeviceLocationCapture()
 
     init(config: IdentityServiceConfig, completion: @escaping (VerificationResult) -> Void) {
@@ -52,6 +60,8 @@ final class VerificationViewController: UIViewController {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    deinit { resendTimer?.invalidate() }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Verificação HUG-ID"
@@ -60,7 +70,7 @@ final class VerificationViewController: UIViewController {
         let tapToDismiss = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tapToDismiss.cancelsTouchesInView = false
         view.addGestureRecognizer(tapToDismiss)
-        setupStack()
+        setupView()
         startSession()
     }
 
@@ -73,17 +83,14 @@ final class VerificationViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         photoTapOverlay.map { view.bringSubviewToFront($0) }
-        confirmTapOverlay.map { view.bringSubviewToFront($0) }
         if case .enterCode = step {
-            updateUI()
-            view.bringSubviewToFront(confirmWrapper)
-            confirmTapOverlay.map { view.bringSubviewToFront($0) }
+            fieldCode.becomeFirstResponder()
         }
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        if photoTapOverlay == nil, !photoWrapper.isHidden {
+        if photoTapOverlay == nil, !buttonPhoto.isHidden {
             let overlay = UIView()
             overlay.backgroundColor = .clear
             overlay.isUserInteractionEnabled = true
@@ -98,183 +105,224 @@ final class VerificationViewController: UIViewController {
             overlay.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(sendPhotoTapped)))
             photoTapOverlay = overlay
         }
-        if confirmTapOverlay == nil, !confirmWrapper.isHidden {
-            let overlay = UIView()
-            overlay.backgroundColor = .clear
-            overlay.isUserInteractionEnabled = true
-            overlay.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(overlay)
-            NSLayoutConstraint.activate([
-                overlay.topAnchor.constraint(equalTo: buttonConfirm.topAnchor),
-                overlay.leadingAnchor.constraint(equalTo: buttonConfirm.leadingAnchor),
-                overlay.trailingAnchor.constraint(equalTo: buttonConfirm.trailingAnchor),
-                overlay.bottomAnchor.constraint(equalTo: buttonConfirm.bottomAnchor)
-            ])
-            overlay.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(confirmTapped)))
-            confirmTapOverlay = overlay
-        }
     }
 
-    private func setupStack() {
-        stack.axis = .vertical
-        stack.spacing = 16
-        stack.alignment = .center
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24),
-            stack.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor)
-        ])
-        labelStatus.numberOfLines = 0
-        labelStatus.textAlignment = .center
-        labelStatus.font = .systemFont(ofSize: 17)
-        stack.addArrangedSubview(labelStatus)
-        labelDestination.numberOfLines = 0
-        labelDestination.textAlignment = .center
-        labelDestination.textColor = .secondaryLabel
-        labelDestination.font = .systemFont(ofSize: 13)
-        stack.addArrangedSubview(labelDestination)
-        photoWrapper.translatesAutoresizingMaskIntoConstraints = false
-        buttonPhoto.translatesAutoresizingMaskIntoConstraints = false
-        applyPhotoButtonStyle()
-        buttonPhoto.setTitle("Tirar Foto", for: .normal)
+    // MARK: - Layout
+
+    private func setupView() {
+        channelStack.axis = .vertical
+        channelStack.spacing = 16
+        channelStack.distribution = .fillEqually
+        channelStack.translatesAutoresizingMaskIntoConstraints = false
+
+        [labelTitle, labelDescription, buttonPhoto, buttonSendCode, fieldCode,
+         labelSendNewCode, labelCounter, buttonSendNewCode].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
+        view.addSubview(channelStack)
+
+        labelTitle.font = .systemFont(ofSize: 22, weight: .semibold)
+        labelTitle.numberOfLines = 0
+        labelDescription.font = .systemFont(ofSize: 16)
+        labelDescription.numberOfLines = 0
+        labelDescription.textColor = .label
+
+        labelSendNewCode.font = .systemFont(ofSize: 14)
+        labelSendNewCode.text = "Não recebeu? Novo código em "
+        labelCounter.font = .systemFont(ofSize: 14)
+
+        applyPrimaryStyle(buttonPhoto, title: "Tirar minha foto")
         buttonPhoto.addTarget(self, action: #selector(sendPhotoTapped), for: .touchUpInside)
-        photoWrapper.addSubview(buttonPhoto)
-        NSLayoutConstraint.activate([
-            buttonPhoto.topAnchor.constraint(equalTo: photoWrapper.topAnchor),
-            buttonPhoto.leadingAnchor.constraint(equalTo: photoWrapper.leadingAnchor),
-            buttonPhoto.trailingAnchor.constraint(equalTo: photoWrapper.trailingAnchor),
-            buttonPhoto.bottomAnchor.constraint(equalTo: photoWrapper.bottomAnchor)
-        ])
-        stack.addArrangedSubview(photoWrapper)
-        NSLayoutConstraint.activate([photoWrapper.widthAnchor.constraint(equalTo: stack.widthAnchor)])
-        stack.addArrangedSubview(fieldCode)
-        NSLayoutConstraint.activate([
-            fieldCode.heightAnchor.constraint(equalToConstant: 56),
-            fieldCode.widthAnchor.constraint(equalTo: stack.widthAnchor)
-        ])
+
+        applyPrimaryStyle(buttonSendCode, title: "Enviar código")
+        buttonSendCode.addTarget(self, action: #selector(sendCodeTapped), for: .touchUpInside)
+
+        buttonSendNewCode.setTitle("Enviar novo código", for: .normal)
+        buttonSendNewCode.addTarget(self, action: #selector(sendCodeTapped), for: .touchUpInside)
+
         fieldCode.delegate = codeFieldDelegate
-        confirmWrapper.translatesAutoresizingMaskIntoConstraints = false
-        buttonConfirm.translatesAutoresizingMaskIntoConstraints = false
-        applyConfirmButtonStyle()
-        buttonConfirm.setTitle("Confirmar código", for: .normal)
-        buttonConfirm.addTarget(self, action: #selector(confirmTapped), for: .touchUpInside)
-        confirmWrapper.addSubview(buttonConfirm)
+        codeFieldDelegate.onComplete = { [weak self] code in
+            self?.fieldCode.text = code
+            self?.confirmTapped()
+        }
+
         NSLayoutConstraint.activate([
-            buttonConfirm.topAnchor.constraint(equalTo: confirmWrapper.topAnchor),
-            buttonConfirm.leadingAnchor.constraint(equalTo: confirmWrapper.leadingAnchor),
-            buttonConfirm.trailingAnchor.constraint(equalTo: confirmWrapper.trailingAnchor),
-            buttonConfirm.bottomAnchor.constraint(equalTo: confirmWrapper.bottomAnchor)
+            labelTitle.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
+            labelTitle.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            labelTitle.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+
+            labelDescription.topAnchor.constraint(equalTo: labelTitle.bottomAnchor, constant: 24),
+            labelDescription.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            labelDescription.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+
+            channelStack.topAnchor.constraint(equalTo: labelDescription.bottomAnchor, constant: 32),
+            channelStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            channelStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+
+            buttonPhoto.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            buttonPhoto.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            buttonPhoto.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32),
+
+            buttonSendCode.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            buttonSendCode.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            buttonSendCode.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32),
+
+            fieldCode.topAnchor.constraint(equalTo: labelDescription.bottomAnchor, constant: 32),
+            fieldCode.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            fieldCode.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            fieldCode.heightAnchor.constraint(equalToConstant: 56),
+
+            labelSendNewCode.topAnchor.constraint(equalTo: fieldCode.bottomAnchor, constant: 12),
+            labelSendNewCode.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+
+            labelCounter.centerYAnchor.constraint(equalTo: labelSendNewCode.centerYAnchor),
+            labelCounter.leadingAnchor.constraint(equalTo: labelSendNewCode.trailingAnchor),
+
+            buttonSendNewCode.topAnchor.constraint(equalTo: fieldCode.bottomAnchor, constant: 24),
+            buttonSendNewCode.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24)
         ])
-        stack.addArrangedSubview(confirmWrapper)
-        NSLayoutConstraint.activate([confirmWrapper.widthAnchor.constraint(equalTo: stack.widthAnchor)])
         updateUI()
     }
 
-    private func applyPhotoButtonStyle() {
-        let tint = view.tintColor ?? .systemBlue
-        buttonPhoto.setTitleColor(.white, for: .normal)
-        buttonPhoto.setTitleColor(.white.withAlphaComponent(0.7), for: .highlighted)
-        buttonPhoto.backgroundColor = tint
-        buttonPhoto.layer.cornerRadius = 12
-        buttonPhoto.clipsToBounds = true
-        buttonPhoto.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        buttonPhoto.contentEdgeInsets = UIEdgeInsets(top: 14, left: 24, bottom: 14, right: 24)
-    }
-
-    private func applyConfirmButtonStyle() {
-        let tint = view.tintColor ?? .systemBlue
-        buttonConfirm.setTitleColor(.white, for: .normal)
-        buttonConfirm.setTitleColor(.white.withAlphaComponent(0.7), for: .highlighted)
-        buttonConfirm.backgroundColor = tint
-        buttonConfirm.layer.cornerRadius = 12
-        buttonConfirm.clipsToBounds = true
-        buttonConfirm.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        buttonConfirm.contentEdgeInsets = UIEdgeInsets(top: 14, left: 24, bottom: 14, right: 24)
+    private func applyPrimaryStyle(_ button: UIButton, title: String) {
+        let tint = view.tintColor ?? .systemGreen
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = tint
+        button.layer.cornerRadius = 12
+        button.clipsToBounds = true
+        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        button.contentEdgeInsets = UIEdgeInsets(top: 14, left: 24, bottom: 14, right: 24)
     }
 
     private func updateUI() {
         switch step {
         case .loading:
-            labelStatus.text = "Criando sessão..."
-            labelDestination.text = nil
-            labelDestination.isHidden = true
+            labelTitle.text = "Verificação HUG-ID"
+            labelDescription.text = "Preparando verificação..."
+            hideChannelUI(true)
             buttonPhoto.isHidden = true
-            photoWrapper.isHidden = true
             photoTapOverlay?.isHidden = true
-            fieldCode.isHidden = true
-            buttonConfirm.isHidden = true
-            confirmWrapper.isHidden = true
-            confirmTapOverlay?.isHidden = true
+            buttonSendCode.isHidden = true
+            hideCodeUI(true)
+
         case .sessionError(let message):
-            labelStatus.text = message
-            labelDestination.text = nil
-            labelDestination.isHidden = true
+            labelTitle.text = "Verificação HUG-ID"
+            labelDescription.text = message
+            hideChannelUI(true)
             buttonPhoto.isHidden = true
-            photoWrapper.isHidden = true
             photoTapOverlay?.isHidden = true
-            fieldCode.isHidden = true
-            buttonConfirm.isHidden = true
-            confirmWrapper.isHidden = true
-            confirmTapOverlay?.isHidden = true
+            buttonSendCode.isHidden = true
+            hideCodeUI(true)
+
         case .takePhoto:
-            labelStatus.text = "Tire uma selfie para enviar."
-            labelDestination.text = nil
-            labelDestination.isHidden = true
-            applyPhotoButtonStyle()
+            labelTitle.text = "Verificação HUG-ID"
+            labelDescription.text = "Tire uma selfie para comprovar sua identidade e ativar o Token."
+            hideChannelUI(true)
+            applyPrimaryStyle(buttonPhoto, title: "Tirar minha foto")
             buttonPhoto.isHidden = false
-            photoWrapper.isHidden = false
             photoTapOverlay?.isHidden = false
-            fieldCode.isHidden = true
-            buttonConfirm.isHidden = true
-            confirmWrapper.isHidden = true
-            confirmTapOverlay?.isHidden = true
-        case .enterCode:
-            labelStatus.text = "Digite o código recebido por e-mail ou SMS."
-            if let dest = maskedDestinationFromPhoto, !dest.isEmpty {
-                labelDestination.text = "Código enviado para: " + dest
-                labelDestination.isHidden = false
+            buttonSendCode.isHidden = true
+            hideCodeUI(true)
+
+        case .chooseChannel:
+            labelTitle.text = "Verificação HUG-ID"
+            if availableChannels.isEmpty {
+                labelDescription.text = "Nenhum canal de envio está disponível no momento. Tente novamente mais tarde."
+                buttonSendCode.isEnabled = false
+                buttonSendCode.alpha = 0.5
             } else {
-                var parts: [String] = []
-                if let e = maskedEmail, !e.isEmpty { parts.append(e) }
-                if let p = maskedPhone, !p.isEmpty { parts.append(p) }
-                labelDestination.text = parts.isEmpty ? nil : "Código enviado para: " + parts.joined(separator: " e ")
-                labelDestination.isHidden = parts.isEmpty
+                labelDescription.text = "Escolha onde deseja receber o código"
+                buttonSendCode.isEnabled = selectedChannel != nil
+                buttonSendCode.alpha = selectedChannel != nil ? 1 : 0.5
             }
+            configureChannelOptions()
+            hideChannelUI(false)
             buttonPhoto.isHidden = true
-            photoWrapper.isHidden = true
             photoTapOverlay?.isHidden = true
-            applyConfirmButtonStyle()
-            fieldCode.isHidden = false
-            buttonConfirm.isHidden = false
-            confirmWrapper.isHidden = false
-            confirmTapOverlay?.isHidden = false
-        case .success:
-            labelStatus.text = "Verificação concluída."
-            labelDestination.isHidden = true
+            applyPrimaryStyle(buttonSendCode, title: "Enviar código")
+            buttonSendCode.isHidden = false
+            hideCodeUI(true)
+
+        case .enterCode:
+            labelTitle.text = "Verificação HUG-ID"
+            if let dest = maskedDestination, !dest.isEmpty {
+                labelDescription.text = "Digite o código enviado para \(dest)"
+            } else {
+                labelDescription.text = "Digite o código recebido"
+            }
+            hideChannelUI(true)
             buttonPhoto.isHidden = true
-            photoWrapper.isHidden = true
-            fieldCode.isHidden = true
-            buttonConfirm.isHidden = true
-            confirmWrapper.isHidden = true
+            photoTapOverlay?.isHidden = true
+            buttonSendCode.isHidden = true
+            hideCodeUI(false)
+            fieldCode.becomeFirstResponder()
+
+        case .success:
+            labelTitle.text = "Verificação HUG-ID"
+            labelDescription.text = "Verificação concluída."
+            hideChannelUI(true)
+            buttonPhoto.isHidden = true
+            photoTapOverlay?.isHidden = true
+            buttonSendCode.isHidden = true
+            hideCodeUI(true)
         }
     }
 
+    private func hideChannelUI(_ hidden: Bool) {
+        channelStack.isHidden = hidden
+    }
+
+    private func hideCodeUI(_ hidden: Bool) {
+        fieldCode.isHidden = hidden
+        labelSendNewCode.isHidden = hidden || resendSeconds <= 0
+        labelCounter.isHidden = hidden || resendSeconds <= 0
+        buttonSendNewCode.isHidden = hidden || resendSeconds > 0
+    }
+
+    private func configureChannelOptions() {
+        channelStack.arrangedSubviews.forEach {
+            channelStack.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        channelButtons.removeAll()
+        for option in availableChannels {
+            let card = ChannelOptionView(option: option)
+            card.isSelectedOption = (option.channel == selectedChannel)
+            card.onTap = { [weak self] channel in
+                self?.didSelectChannel(channel)
+            }
+            card.heightAnchor.constraint(greaterThanOrEqualToConstant: 88).isActive = true
+            channelStack.addArrangedSubview(card)
+            channelButtons.append(card)
+        }
+    }
+
+    private func didSelectChannel(_ channel: String) {
+        selectedChannel = channel
+        configureChannelOptions()
+        buttonSendCode.isEnabled = true
+        buttonSendCode.alpha = 1
+    }
+
+    // MARK: - Fluxo
+
     private func startSession() {
-        maskedDestinationFromPhoto = nil
+        step = .loading
+        updateUI()
         Task { @MainActor in
             do {
-                let (id, _, maskedE, maskedP) = try await api.createSession(userId: config.userId, email: config.email, phone: config.phone)
-                sessionId = id
-                maskedEmail = maskedE
-                maskedPhone = maskedP
-                step = .takePhoto(sessionId: id)
+                let result = try await api.createSession(userId: config.userId, email: config.email, phone: config.phone)
+                sessionId = result.sessionId
+                availableChannels = result.availableChannels
+                if availableChannels.count == 1 {
+                    selectedChannel = availableChannels[0].channel
+                }
+                step = .takePhoto
                 updateUI()
                 await submitLocationIfEnabled(context: "verification-session-start")
             } catch {
-                labelStatus.text = "Erro ao criar sessão: \(error.localizedDescription)"
-                sessionId = ""
                 step = .sessionError("Erro ao criar sessão: \(error.localizedDescription)")
                 updateUI()
             }
@@ -283,15 +331,18 @@ final class VerificationViewController: UIViewController {
 
     @objc private func sendPhotoTapped() {
         guard !sessionId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            labelStatus.text = "Não foi possível criar a sessão HUG-ID. Tente abrir a verificação novamente."
+            step = .sessionError("Não foi possível criar a sessão HUG-ID. Tente abrir a verificação novamente.")
+            updateUI()
             return
         }
-
         if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 DispatchQueue.main.async {
                     if granted { self?.openCamera() }
-                    else { self?.labelStatus.text = "Permita acesso à câmera nas configurações." }
+                    else {
+                        self?.step = .sessionError("Permita acesso à câmera nas configurações.")
+                        self?.updateUI()
+                    }
                 }
             }
             return
@@ -319,18 +370,62 @@ final class VerificationViewController: UIViewController {
 
     private func uploadPhoto(_ image: UIImage) {
         guard let data = image.jpegData(compressionQuality: 0.8) else { return }
-        labelStatus.text = "Enviando foto..."
+        labelDescription.text = "Enviando foto..."
         buttonPhoto.isEnabled = false
         Task { @MainActor in
             do {
-                maskedDestinationFromPhoto = try await api.uploadPhoto(sessionId: sessionId, imageData: data)
+                try await api.uploadPhoto(sessionId: sessionId, imageData: data)
                 await submitLocationIfEnabled(context: "verification-photo-uploaded")
-                step = .enterCode(sessionId: sessionId)
+                step = .chooseChannel
                 updateUI()
             } catch {
-                labelStatus.text = "Erro: \(error.localizedDescription)"
+                labelDescription.text = "Erro: \(error.localizedDescription)"
+                step = .takePhoto
+                updateUI()
             }
             buttonPhoto.isEnabled = true
+        }
+    }
+
+    @objc private func sendCodeTapped() {
+        guard let channel = selectedChannel else {
+            labelDescription.text = "Selecione um canal para receber o código."
+            return
+        }
+        buttonSendCode.isEnabled = false
+        labelDescription.text = "Enviando código..."
+        Task { @MainActor in
+            do {
+                maskedDestination = try await api.sendCode(sessionId: sessionId, channel: channel)
+                startResendCooldown()
+                step = .enterCode
+                updateUI()
+            } catch {
+                labelDescription.text = "Erro: \(error.localizedDescription)"
+                step = .chooseChannel
+                updateUI()
+            }
+            buttonSendCode.isEnabled = true
+        }
+    }
+
+    @objc private func confirmTapped() {
+        let code = (fieldCode.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard code.count >= 6 else {
+            labelDescription.text = "Digite o código de 6 dígitos."
+            return
+        }
+        labelDescription.text = "Verificando..."
+        Task { @MainActor in
+            do {
+                try await api.confirmCode(sessionId: sessionId, code: String(code.prefix(6)))
+                await submitLocationIfEnabled(context: "verification-code-confirmed")
+                step = .success
+                updateUI()
+                dismiss(animated: true) { [weak self] in self?.completion(.success) }
+            } catch {
+                labelDescription.text = "Erro: \(error.localizedDescription)"
+            }
         }
     }
 
@@ -345,30 +440,33 @@ final class VerificationViewController: UIViewController {
                 sample: sample
             )
         } catch {
-            // Best-effort: não bloqueia o fluxo de verificação.
+            // Best-effort
         }
     }
 
-    @objc private func confirmTapped() {
-        let code = (fieldCode.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        guard code.count >= 6 else {
-            labelStatus.text = "Digite o código de 6 dígitos."
-            return
-        }
-        buttonConfirm.isEnabled = false
-        labelStatus.text = "Verificando..."
-        Task { @MainActor in
-            do {
-                try await api.confirmCode(sessionId: sessionId, code: String(code.prefix(6)))
-                await submitLocationIfEnabled(context: "verification-code-confirmed")
-                step = .success
-                updateUI()
-                dismiss(animated: true) { [weak self] in self?.completion(.success) }
-            } catch {
-                labelStatus.text = "Erro: \(error.localizedDescription)"
-                buttonConfirm.isEnabled = true
+    private func startResendCooldown() {
+        resendTimer?.invalidate()
+        resendSeconds = Self.resendCooldownSeconds
+        updateResendLabels()
+        resendTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.resendSeconds -= 1
+            self.updateResendLabels()
+            if self.resendSeconds <= 0 {
+                self.resendTimer?.invalidate()
+                self.resendTimer = nil
             }
         }
+    }
+
+    private func updateResendLabels() {
+        guard case .enterCode = step else { return }
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.minute, .second]
+        formatter.unitsStyle = .positional
+        formatter.zeroFormattingBehavior = .pad
+        labelCounter.text = formatter.string(from: TimeInterval(max(0, resendSeconds))) ?? "0:00"
+        hideCodeUI(false)
     }
 }
 
@@ -383,13 +481,71 @@ extension VerificationViewController: UIImagePickerControllerDelegate, UINavigat
     }
 }
 
+private final class ChannelOptionView: UIControl {
+    var onTap: ((String) -> Void)?
+    private let channel: String
+    private let titleLabel = UILabel()
+    private let destinationLabel = UILabel()
+
+    var isSelectedOption: Bool = false {
+        didSet { applySelectionStyle() }
+    }
+
+    init(option: AvailableChannel) {
+        self.channel = option.channel
+        super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
+        layer.cornerRadius = 16
+        layer.borderWidth = 2
+        backgroundColor = .secondarySystemBackground
+
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.font = .systemFont(ofSize: 22, weight: .semibold)
+        titleLabel.text = option.displayTitle
+
+        destinationLabel.translatesAutoresizingMaskIntoConstraints = false
+        destinationLabel.font = .systemFont(ofSize: 18)
+        destinationLabel.textColor = .secondaryLabel
+        destinationLabel.numberOfLines = 2
+        destinationLabel.text = option.maskedDestination ?? ""
+
+        addSubview(titleLabel)
+        addSubview(destinationLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: 20),
+            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            destinationLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            destinationLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            destinationLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            destinationLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20)
+        ])
+        addTarget(self, action: #selector(tapped), for: .touchUpInside)
+        applySelectionStyle()
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    @objc private func tapped() { onTap?(channel) }
+
+    private func applySelectionStyle() {
+        let brand = tintColor ?? .systemGreen
+        layer.borderColor = (isSelectedOption ? brand : UIColor.separator).cgColor
+        backgroundColor = isSelectedOption ? brand.withAlphaComponent(0.08) : .secondarySystemBackground
+    }
+}
+
 private final class CodeFieldDelegate: NSObject, UITextFieldDelegate {
     let maxDigits: Int
+    var onComplete: ((String) -> Void)?
     init(maxDigits: Int) { self.maxDigits = maxDigits }
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         guard string.unicodeScalars.allSatisfy({ CharacterSet.decimalDigits.contains($0) }) else { return false }
         let current = (textField.text ?? "") as NSString
         let result = current.replacingCharacters(in: range, with: string)
+        if result.count == maxDigits {
+            DispatchQueue.main.async { [weak self] in self?.onComplete?(result) }
+        }
         return result.count <= maxDigits
     }
 }

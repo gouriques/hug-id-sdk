@@ -1,11 +1,11 @@
 import UIKit
 
 /// Serviço de verificação de identidade HUG-Identity (SDK).
-/// Apresenta o fluxo: criar sessão → captura de foto → código por SMS/e-mail → confirmação.
+/// Fluxo: sessão → selfie → escolha de canal OTP (e-mail/SMS/WhatsApp, purpose 3) → código → confirmação.
 public enum IdentityService {
 
     /// Inicia o fluxo de verificação de identidade a partir do view controller informado.
-    /// Apresenta modalmente a tela de verificação (sessão, foto, código). Ao concluir com sucesso, cancelamento ou falha, o completion é chamado.
+    /// Apresenta modalmente a tela de verificação. Ao concluir com sucesso, cancelamento ou falha, o completion é chamado.
     /// - Parameters:
     ///   - from: View controller a partir do qual o fluxo será apresentado (geralmente a tela atual).
     ///   - config: Configuração com URL base, token (opcional), userId, email e phone.

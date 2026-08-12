@@ -1,5 +1,27 @@
 import Foundation
 
+struct AvailableChannel: Equatable {
+    let channel: String
+    let maskedDestination: String?
+
+    var displayTitle: String {
+        switch channel.lowercased() {
+        case "email": return "E-mail"
+        case "sms": return "SMS"
+        case "whatsapp": return "WhatsApp"
+        default: return channel.uppercased()
+        }
+    }
+}
+
+struct VerificationSessionResult {
+    let sessionId: String
+    let expiresAt: Date
+    let maskedEmail: String?
+    let maskedPhone: String?
+    let availableChannels: [AvailableChannel]
+}
+
 final class IdentityApiClient {
     private let baseURL: String
     private let authorizationToken: String?
@@ -23,7 +45,7 @@ final class IdentityApiClient {
         }
     }
 
-    func createSession(userId: String, email: String, phone: String) async throws -> (sessionId: String, expiresAt: Date, maskedEmail: String?, maskedPhone: String?) {
+    func createSession(userId: String, email: String, phone: String) async throws -> VerificationSessionResult {
         guard let requestURL = url("v1/verification/session") else { throw IdentityServiceError.invalidURL }
         var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"
@@ -38,10 +60,18 @@ final class IdentityApiClient {
         }
         let decoded = try JSONDecoder().decode(CreateSessionResponse.self, from: data)
         let expires = ISO8601DateFormatter().date(from: decoded.expiresAt) ?? Date()
-        return (decoded.verificationSessionId, expires, decoded.maskedEmail, decoded.maskedPhone)
+        let channels = resolveChannels(from: decoded)
+        return VerificationSessionResult(
+            sessionId: decoded.verificationSessionId,
+            expiresAt: expires,
+            maskedEmail: decoded.maskedEmail,
+            maskedPhone: decoded.maskedPhone,
+            availableChannels: channels
+        )
     }
 
-    func uploadPhoto(sessionId: String, imageData: Data, contentType: String = "image/jpeg") async throws -> String? {
+    /// Upload da selfie. Não envia OTP — em seguida chamar sendCode(channel:).
+    func uploadPhoto(sessionId: String, imageData: Data, contentType: String = "image/jpeg") async throws {
         guard let requestURL = url("v1/verification/photo") else { throw IdentityServiceError.invalidURL }
         let boundary = "Boundary-\(UUID().uuidString)"
         var request = URLRequest(url: requestURL)
@@ -67,6 +97,30 @@ final class IdentityApiClient {
         }
         let decoded = try JSONDecoder().decode(PhotoResponse.self, from: data)
         if !decoded.accepted { throw IdentityServiceError.photoRejected(decoded.message ?? "Foto não aceita") }
+    }
+
+    /// Envia OTP no canal escolhido (purpose OTP = 3).
+    @discardableResult
+    func sendCode(sessionId: String, channel: String) async throws -> String? {
+        guard let requestURL = url("v1/verification/send-code") else { throw IdentityServiceError.invalidURL }
+        var request = URLRequest(url: requestURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        setAuth(&request)
+        request.httpBody = try JSONEncoder().encode(SendCodeBody(verificationSessionId: sessionId, channel: channel))
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw IdentityServiceError.invalidResponse }
+        if http.statusCode >= 400 {
+            if let err = try? JSONDecoder().decode(SendCodeResponse.self, from: data), let msg = err.error {
+                throw IdentityServiceError.apiError(statusCode: http.statusCode, message: msg)
+            }
+            let msg = String(data: data, encoding: .utf8)
+            throw IdentityServiceError.apiError(statusCode: http.statusCode, message: msg)
+        }
+        let decoded = try JSONDecoder().decode(SendCodeResponse.self, from: data)
+        guard decoded.sent else {
+            throw IdentityServiceError.apiError(statusCode: http.statusCode, message: decoded.error ?? "Não foi possível enviar o código.")
+        }
         return decoded.maskedDestination
     }
 
@@ -116,6 +170,21 @@ final class IdentityApiClient {
         let decoded = try JSONDecoder().decode(ConfirmResponse.self, from: data)
         if !decoded.verified { throw IdentityServiceError.codeInvalid(decoded.reason ?? "Código inválido") }
     }
+
+    private func resolveChannels(from decoded: CreateSessionResponse) -> [AvailableChannel] {
+        let fromApi = (decoded.availableChannels ?? []).map {
+            AvailableChannel(channel: $0.channel, maskedDestination: $0.maskedDestination)
+        }
+        if !fromApi.isEmpty { return fromApi }
+        var fallback: [AvailableChannel] = []
+        if let e = decoded.maskedEmail, !e.isEmpty {
+            fallback.append(AvailableChannel(channel: "email", maskedDestination: e))
+        }
+        if let p = decoded.maskedPhone, !p.isEmpty {
+            fallback.append(AvailableChannel(channel: "sms", maskedDestination: p))
+        }
+        return fallback
+    }
 }
 
 private struct CreateSessionBody: Encodable {
@@ -129,12 +198,29 @@ private struct CreateSessionResponse: Decodable {
     let expiresAt: String
     let maskedEmail: String?
     let maskedPhone: String?
+    let availableChannels: [ChannelDto]?
+}
+
+private struct ChannelDto: Decodable {
+    let channel: String
+    let maskedDestination: String?
 }
 
 private struct PhotoResponse: Decodable {
     let accepted: Bool
     let message: String?
     let maskedDestination: String?
+}
+
+private struct SendCodeBody: Encodable {
+    let verificationSessionId: String
+    let channel: String
+}
+
+private struct SendCodeResponse: Decodable {
+    let sent: Bool
+    let maskedDestination: String?
+    let error: String?
 }
 
 private struct ConfirmBody: Encodable {
