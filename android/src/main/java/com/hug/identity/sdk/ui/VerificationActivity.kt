@@ -137,6 +137,25 @@ class VerificationActivity : AppCompatActivity() {
         findViewById<View>(R.id.buttonConfirm).setOnClickListener { confirmCode() }
         findViewById<View>(R.id.buttonSendCode).setOnClickListener { sendCode() }
         findViewById<View>(R.id.buttonSendNewCode).setOnClickListener { sendCode() }
+        findViewById<View>(R.id.buttonPasteCode).setOnClickListener { pasteCodeFromClipboard() }
+    }
+
+    private fun pasteCodeFromClipboard() {
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+        val raw = clipboard?.primaryClip?.takeIf { it.itemCount > 0 }
+            ?.getItemAt(0)?.coerceToText(this)?.toString().orEmpty()
+        val digits = raw.filter { it.isDigit() }.take(6)
+        if (digits.isEmpty()) {
+            Toast.makeText(
+                this,
+                "Copie o código na mensagem e toque em Colar código.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+        val codeField = findViewById<EditText>(R.id.codeField)
+        codeField.setText(digits)
+        codeField.setSelection(digits.length)
     }
 
     private fun startSession() {
@@ -204,6 +223,7 @@ class VerificationActivity : AppCompatActivity() {
         val uploadProgress = findViewById<ProgressBar>(R.id.uploadProgress)
         val resendRow = findViewById<View>(R.id.resendRow)
         val buttonSendNewCode = findViewById<View>(R.id.buttonSendNewCode)
+        val buttonPasteCode = findViewById<View>(R.id.buttonPasteCode)
 
         when (step) {
             Step.LOADING -> {
@@ -211,6 +231,7 @@ class VerificationActivity : AppCompatActivity() {
                 photoSection.visibility = View.GONE
                 channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
+                buttonPasteCode.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
                 resendRow.visibility = View.GONE
                 buttonSendNewCode.visibility = View.GONE
@@ -221,6 +242,7 @@ class VerificationActivity : AppCompatActivity() {
                 photoSection.visibility = View.VISIBLE
                 channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
+                buttonPasteCode.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
                 resendRow.visibility = View.GONE
                 buttonSendNewCode.visibility = View.GONE
@@ -232,6 +254,7 @@ class VerificationActivity : AppCompatActivity() {
                 photoSection.visibility = View.VISIBLE
                 channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
+                buttonPasteCode.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
                 resendRow.visibility = View.GONE
                 buttonSendNewCode.visibility = View.GONE
@@ -250,6 +273,7 @@ class VerificationActivity : AppCompatActivity() {
                 buttonSendCode.isEnabled = selectedChannel != null && availableChannels.isNotEmpty()
                 buttonSendCode.alpha = if (buttonSendCode.isEnabled) 1f else 0.5f
                 codeField.visibility = View.GONE
+                buttonPasteCode.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
                 resendRow.visibility = View.GONE
                 buttonSendNewCode.visibility = View.GONE
@@ -263,6 +287,7 @@ class VerificationActivity : AppCompatActivity() {
                 photoSection.visibility = View.GONE
                 channelSection.visibility = View.GONE
                 codeField.visibility = View.VISIBLE
+                buttonPasteCode.visibility = View.VISIBLE
                 buttonConfirm.visibility = View.VISIBLE
                 uploadProgress.visibility = View.GONE
                 updateResendVisibility()
@@ -272,6 +297,7 @@ class VerificationActivity : AppCompatActivity() {
                 photoSection.visibility = View.GONE
                 channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
+                buttonPasteCode.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
                 resendRow.visibility = View.GONE
                 buttonSendNewCode.visibility = View.GONE

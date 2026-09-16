@@ -27,34 +27,69 @@ public final class ActivityVerificationBinding implements ViewBinding {
   public final Button buttonConfirm;
 
   @NonNull
+  public final Button buttonPasteCode;
+
+  @NonNull
   public final Button buttonPhoto;
+
+  @NonNull
+  public final Button buttonSendCode;
+
+  @NonNull
+  public final Button buttonSendNewCode;
+
+  @NonNull
+  public final LinearLayout channelContainer;
+
+  @NonNull
+  public final LinearLayout channelSection;
 
   @NonNull
   public final EditText codeField;
 
   @NonNull
-  public final TextView destinationText;
+  public final LinearLayout photoSection;
 
   @NonNull
-  public final LinearLayout photoSection;
+  public final TextView resendCounter;
+
+  @NonNull
+  public final TextView resendHint;
+
+  @NonNull
+  public final LinearLayout resendRow;
 
   @NonNull
   public final TextView statusText;
 
   @NonNull
+  public final TextView titleText;
+
+  @NonNull
   public final ProgressBar uploadProgress;
 
   private ActivityVerificationBinding(@NonNull ScrollView rootView, @NonNull Button buttonConfirm,
-      @NonNull Button buttonPhoto, @NonNull EditText codeField, @NonNull TextView destinationText,
-      @NonNull LinearLayout photoSection, @NonNull TextView statusText,
-      @NonNull ProgressBar uploadProgress) {
+      @NonNull Button buttonPasteCode, @NonNull Button buttonPhoto, @NonNull Button buttonSendCode,
+      @NonNull Button buttonSendNewCode, @NonNull LinearLayout channelContainer,
+      @NonNull LinearLayout channelSection, @NonNull EditText codeField,
+      @NonNull LinearLayout photoSection, @NonNull TextView resendCounter,
+      @NonNull TextView resendHint, @NonNull LinearLayout resendRow, @NonNull TextView statusText,
+      @NonNull TextView titleText, @NonNull ProgressBar uploadProgress) {
     this.rootView = rootView;
     this.buttonConfirm = buttonConfirm;
+    this.buttonPasteCode = buttonPasteCode;
     this.buttonPhoto = buttonPhoto;
+    this.buttonSendCode = buttonSendCode;
+    this.buttonSendNewCode = buttonSendNewCode;
+    this.channelContainer = channelContainer;
+    this.channelSection = channelSection;
     this.codeField = codeField;
-    this.destinationText = destinationText;
     this.photoSection = photoSection;
+    this.resendCounter = resendCounter;
+    this.resendHint = resendHint;
+    this.resendRow = resendRow;
     this.statusText = statusText;
+    this.titleText = titleText;
     this.uploadProgress = uploadProgress;
   }
 
@@ -91,9 +126,39 @@ public final class ActivityVerificationBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.buttonPasteCode;
+      Button buttonPasteCode = ViewBindings.findChildViewById(rootView, id);
+      if (buttonPasteCode == null) {
+        break missingId;
+      }
+
       id = R.id.buttonPhoto;
       Button buttonPhoto = ViewBindings.findChildViewById(rootView, id);
       if (buttonPhoto == null) {
+        break missingId;
+      }
+
+      id = R.id.buttonSendCode;
+      Button buttonSendCode = ViewBindings.findChildViewById(rootView, id);
+      if (buttonSendCode == null) {
+        break missingId;
+      }
+
+      id = R.id.buttonSendNewCode;
+      Button buttonSendNewCode = ViewBindings.findChildViewById(rootView, id);
+      if (buttonSendNewCode == null) {
+        break missingId;
+      }
+
+      id = R.id.channelContainer;
+      LinearLayout channelContainer = ViewBindings.findChildViewById(rootView, id);
+      if (channelContainer == null) {
+        break missingId;
+      }
+
+      id = R.id.channelSection;
+      LinearLayout channelSection = ViewBindings.findChildViewById(rootView, id);
+      if (channelSection == null) {
         break missingId;
       }
 
@@ -103,15 +168,27 @@ public final class ActivityVerificationBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.destinationText;
-      TextView destinationText = ViewBindings.findChildViewById(rootView, id);
-      if (destinationText == null) {
-        break missingId;
-      }
-
       id = R.id.photoSection;
       LinearLayout photoSection = ViewBindings.findChildViewById(rootView, id);
       if (photoSection == null) {
+        break missingId;
+      }
+
+      id = R.id.resendCounter;
+      TextView resendCounter = ViewBindings.findChildViewById(rootView, id);
+      if (resendCounter == null) {
+        break missingId;
+      }
+
+      id = R.id.resendHint;
+      TextView resendHint = ViewBindings.findChildViewById(rootView, id);
+      if (resendHint == null) {
+        break missingId;
+      }
+
+      id = R.id.resendRow;
+      LinearLayout resendRow = ViewBindings.findChildViewById(rootView, id);
+      if (resendRow == null) {
         break missingId;
       }
 
@@ -121,14 +198,22 @@ public final class ActivityVerificationBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.titleText;
+      TextView titleText = ViewBindings.findChildViewById(rootView, id);
+      if (titleText == null) {
+        break missingId;
+      }
+
       id = R.id.uploadProgress;
       ProgressBar uploadProgress = ViewBindings.findChildViewById(rootView, id);
       if (uploadProgress == null) {
         break missingId;
       }
 
-      return new ActivityVerificationBinding((ScrollView) rootView, buttonConfirm, buttonPhoto,
-          codeField, destinationText, photoSection, statusText, uploadProgress);
+      return new ActivityVerificationBinding((ScrollView) rootView, buttonConfirm, buttonPasteCode,
+          buttonPhoto, buttonSendCode, buttonSendNewCode, channelContainer, channelSection,
+          codeField, photoSection, resendCounter, resendHint, resendRow, statusText, titleText,
+          uploadProgress);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
