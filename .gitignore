@@ -1,4 +1,5 @@
 .build/
+.swiftpm/
 
 # Android/Gradle local build outputs.
 .gradle/
