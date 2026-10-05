@@ -1,6 +1,8 @@
 package com.hug.identity.sdk.ui
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -9,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
@@ -16,6 +19,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -41,6 +45,7 @@ import com.hug.identity.sdk.api.dto.SessionLocationRequest
 import com.hug.identity.sdk.location.DeviceLocationHelper
 import com.hug.identity.sdk.location.DeviceLocationSample
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -69,6 +74,8 @@ class VerificationActivity : AppCompatActivity() {
     private var selectedChannel: String? = null
     private var maskedDestination: String? = null
     private var photoFile: File? = null
+    private var pendingPhoto: File? = null
+    private var captureUri: Uri? = null
     private var resendTimer: CountDownTimer? = null
     private var resendSecondsLeft: Int = 0
 
@@ -87,7 +94,7 @@ class VerificationActivity : AppCompatActivity() {
         ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri == null) return@registerForActivityResult
-        copyUriToCacheFile(uri)?.let { uploadPhoto(it) }
+        copyUriToCacheFile(uri)?.let { showPhotoReview(it) }
             ?: showUploadError("Não foi possível ler a imagem da galeria.")
     }
 
@@ -101,7 +108,7 @@ class VerificationActivity : AppCompatActivity() {
         locationPermissionContinuation = null
     }
 
-    private enum class Step { LOADING, TAKE_PHOTO, UPLOADING, CHOOSE_CHANNEL, ENTER_CODE, SUCCESS }
+    private enum class Step { LOADING, TAKE_PHOTO, REVIEW_PHOTO, UPLOADING, CHOOSE_CHANNEL, ENTER_CODE, SUCCESS }
 
     private var step = Step.LOADING
 
@@ -117,8 +124,21 @@ class VerificationActivity : AppCompatActivity() {
             finish()
             return
         }
+        savedInstanceState?.getString(STATE_CAPTURE_URI)?.let { captureUri = Uri.parse(it) }
+        savedInstanceState?.getString(STATE_PHOTO_FILE)?.let { photoFile = File(it) }
+        sessionId = savedInstanceState?.getString(STATE_SESSION).orEmpty()
         setupListeners()
-        startSession()
+        if (sessionId.isBlank()) startSession() else {
+            step = Step.TAKE_PHOTO
+            updateUI()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        captureUri?.let { outState.putString(STATE_CAPTURE_URI, it.toString()) }
+        photoFile?.absolutePath?.let { outState.putString(STATE_PHOTO_FILE, it) }
+        if (sessionId.isNotBlank()) outState.putString(STATE_SESSION, sessionId)
     }
 
     override fun onDestroy() {
@@ -134,6 +154,14 @@ class VerificationActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         findViewById<View>(R.id.buttonPhoto).setOnClickListener { pickOrTakePhoto() }
+        findViewById<View>(R.id.buttonSendPhoto).setOnClickListener {
+            val file = pendingPhoto
+            if (file == null || !file.exists() || file.length() == 0L) {
+                showUploadError("Tire a foto novamente antes de enviar.")
+                return@setOnClickListener
+            }
+            uploadPhoto(file)
+        }
         findViewById<View>(R.id.buttonConfirm).setOnClickListener { confirmCode() }
         findViewById<View>(R.id.buttonSendCode).setOnClickListener { sendCode() }
         findViewById<View>(R.id.buttonSendNewCode).setOnClickListener { sendCode() }
@@ -183,8 +211,10 @@ class VerificationActivity : AppCompatActivity() {
                     if (availableChannels.size == 1) {
                         selectedChannel = availableChannels[0].channel
                     }
-                    step = Step.TAKE_PHOTO
-                    updateUI()
+                    if (step == Step.LOADING) {
+                        step = Step.TAKE_PHOTO
+                        updateUI()
+                    }
                     submitLocationIfEnabled("verification-session-start")
                 } else {
                     setFailure("Erro ao criar sessão: ${response.code()}")
@@ -218,7 +248,9 @@ class VerificationActivity : AppCompatActivity() {
         val channelSection = findViewById<View>(R.id.channelSection)
         val codeField = findViewById<EditText>(R.id.codeField)
         val buttonConfirm = findViewById<View>(R.id.buttonConfirm)
-        val buttonPhoto = findViewById<View>(R.id.buttonPhoto)
+        val buttonPhoto = findViewById<Button>(R.id.buttonPhoto)
+        val buttonSendPhoto = findViewById<Button>(R.id.buttonSendPhoto)
+        val photoPreview = findViewById<ImageView>(R.id.photoPreview)
         val buttonSendCode = findViewById<Button>(R.id.buttonSendCode)
         val uploadProgress = findViewById<ProgressBar>(R.id.uploadProgress)
         val resendRow = findViewById<View>(R.id.resendRow)
@@ -240,18 +272,38 @@ class VerificationActivity : AppCompatActivity() {
             Step.TAKE_PHOTO -> {
                 statusText.text = "Tire uma selfie para comprovar sua identidade e ativar o Token."
                 photoSection.visibility = View.VISIBLE
+                photoPreview.visibility = View.GONE
                 channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
                 buttonPasteCode.visibility = View.GONE
                 buttonConfirm.visibility = View.GONE
                 resendRow.visibility = View.GONE
                 buttonSendNewCode.visibility = View.GONE
+                buttonPhoto.text = "Tirar minha foto"
                 buttonPhoto.isEnabled = true
+                buttonSendPhoto.visibility = View.GONE
+                uploadProgress.visibility = View.GONE
+            }
+            Step.REVIEW_PHOTO -> {
+                statusText.text = "Confira a selfie e toque em Enviar."
+                photoSection.visibility = View.VISIBLE
+                photoPreview.visibility = View.VISIBLE
+                channelSection.visibility = View.GONE
+                codeField.visibility = View.GONE
+                buttonPasteCode.visibility = View.GONE
+                buttonConfirm.visibility = View.GONE
+                resendRow.visibility = View.GONE
+                buttonSendNewCode.visibility = View.GONE
+                buttonPhoto.text = "Tirar outra foto"
+                buttonPhoto.isEnabled = true
+                buttonSendPhoto.visibility = View.VISIBLE
+                buttonSendPhoto.isEnabled = true
                 uploadProgress.visibility = View.GONE
             }
             Step.UPLOADING -> {
                 statusText.text = "Enviando foto... Aguarde."
                 photoSection.visibility = View.VISIBLE
+                photoPreview.visibility = View.VISIBLE
                 channelSection.visibility = View.GONE
                 codeField.visibility = View.GONE
                 buttonPasteCode.visibility = View.GONE
@@ -259,6 +311,8 @@ class VerificationActivity : AppCompatActivity() {
                 resendRow.visibility = View.GONE
                 buttonSendNewCode.visibility = View.GONE
                 buttonPhoto.isEnabled = false
+                buttonSendPhoto.visibility = View.VISIBLE
+                buttonSendPhoto.isEnabled = false
                 uploadProgress.visibility = View.VISIBLE
             }
             Step.CHOOSE_CHANNEL -> {
@@ -343,18 +397,53 @@ class VerificationActivity : AppCompatActivity() {
     }
 
     private fun handleCameraResult(result: ActivityResult) {
-        if (result.resultCode != RESULT_OK) return
-        val file = resolveCaptureToFile(result)
-        if (file == null) {
-            showUploadError(
-                "A foto não foi gravada no dispositivo. No emulador, use Galeria ou tente novamente."
-            )
+        Log.w(
+            TAG,
+            "camera result=${result.resultCode} uri=$captureUri file=${photoFile?.absolutePath} size=${photoFile?.length() ?: 0}"
+        )
+        val immediate = resolveCaptureToFile(result)
+        if (immediate != null) {
+            showPhotoReview(immediate)
             return
         }
-        uploadPhoto(file)
+        lifecycleScope.launch {
+            repeat(8) {
+                delay(250)
+                val late = resolveCaptureToFile(result)
+                if (late != null) {
+                    showPhotoReview(late)
+                    return@launch
+                }
+            }
+            showUploadError("A câmera não devolveu a foto. Tire novamente e confirme com OK.")
+        }
+    }
+
+    private fun showPhotoReview(file: File) {
+        pendingPhoto = file
+        val preview = findViewById<ImageView>(R.id.photoPreview)
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+        if (bitmap == null) {
+            pendingPhoto = null
+            showUploadError("Não foi possível abrir a foto. Tire novamente.")
+            return
+        }
+        preview.setImageBitmap(bitmap)
+        releaseCaptureUri()
+        step = Step.REVIEW_PHOTO
+        updateUI()
+    }
+
+    private fun releaseCaptureUri() {
+        val uri = captureUri ?: return
+        captureUri = null
+        if (uri.authority?.contains("media") == true) {
+            runCatching { contentResolver.delete(uri, null, null) }
+        }
     }
 
     private fun resolveCaptureToFile(result: ActivityResult): File? {
+        captureUri?.let { uri -> copyUriToCacheFile(uri) }?.let { return it }
         photoFile?.takeIf { it.exists() && it.length() > 0L }?.let { return it }
 
         val data = result.data ?: return null
@@ -445,30 +534,43 @@ class VerificationActivity : AppCompatActivity() {
 
     private fun launchCameraIntent() {
         try {
-            photoFile = File(cacheDir, "photo_${System.currentTimeMillis()}.jpg")
-            val uri = FileProvider.getUriForFile(
-                this,
-                "${packageName}.hugidentity.fileprovider",
-                photoFile!!
-            )
+            val uri = createCaptureUri()
+            captureUri = uri
+            val flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
                 putExtra(MediaStore.EXTRA_OUTPUT, uri)
-                addFlags(
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
+                clipData = ClipData.newUri(contentResolver, "selfie", uri)
+                addFlags(flags)
+                putExtra("android.intent.extras.CAMERA_FACING", 1)
+                putExtra("android.intent.extra.USE_FRONT_CAMERA", true)
             }
             val cameraApps = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
             for (resolve in cameraApps) {
-                grantUriPermission(
-                    resolve.activityInfo.packageName,
-                    uri,
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
+                grantUriPermission(resolve.activityInfo.packageName, uri, flags)
             }
             cameraLauncher.launch(intent)
         } catch (e: Exception) {
             showUploadError("Erro ao abrir câmera: ${e.message}")
         }
+    }
+
+    private fun createCaptureUri(): Uri {
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "hug_selfie_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/HUG")
+            }
+        }
+        contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)?.let { return it }
+
+        val dir = externalCacheDir ?: cacheDir
+        photoFile = File(dir, "photo_${System.currentTimeMillis()}.jpg")
+        return FileProvider.getUriForFile(
+            this,
+            "${packageName}.hugidentity.fileprovider",
+            photoFile!!
+        )
     }
 
     private fun uploadPhoto(file: File) {
@@ -665,7 +767,7 @@ class VerificationActivity : AppCompatActivity() {
     private fun showUploadError(message: String) {
         Log.e(TAG, message)
         if (isFinishing) return
-        step = Step.TAKE_PHOTO
+        step = if (pendingPhoto != null && pendingPhoto!!.exists()) Step.REVIEW_PHOTO else Step.TAKE_PHOTO
         updateUI()
         findViewById<TextView>(R.id.statusText).text = message
         AlertDialog.Builder(this)
@@ -782,5 +884,8 @@ class VerificationActivity : AppCompatActivity() {
         private const val MAX_UPLOAD_DIMENSION_PX = 1280
         private const val JPEG_QUALITY = 85
         private const val RESEND_COOLDOWN_SECONDS = 60
+        private const val STATE_CAPTURE_URI = "hug_capture_uri"
+        private const val STATE_PHOTO_FILE = "hug_photo_file"
+        private const val STATE_SESSION = "hug_session_id"
     }
 }

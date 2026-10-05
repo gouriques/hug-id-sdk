@@ -58,11 +58,33 @@
             android:orientation="vertical"
             android:visibility="gone">
 
+            <ImageView
+                android:id="@+id/photoPreview"
+                android:layout_width="match_parent"
+                android:layout_height="280dp"
+                android:layout_marginBottom="16dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="Selfie capturada"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/buttonPhoto"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tirar minha foto" />
+                android:backgroundTint="@color/hug_identity_primary"
+                android:text="Tirar minha foto"
+                android:textColor="@android:color/white" />
+
+            <Button
+                android:id="@+id/buttonSendPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="@color/hug_identity_primary"
+                android:text="Enviar"
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <ProgressBar
                 android:id="@+id/uploadProgress"
